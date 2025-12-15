@@ -543,11 +543,12 @@ def search_comments():
         return jsonify({"error": str(e)}), 500
 
 
-if __name__ == '__main__':
-    host = config['dashboard']['host']
-    port = config['dashboard']['port']
-    debug = config['dashboard']['debug']
-    
-    logger.info(f"Starting dashboard on {host}:{port}")
-    app.run(host=host, port=port, debug=debug)
+if __name__ == "__main__":
+    import os
+
+    port = int(os.environ.get("PORT", config["dashboard"]["port"]))
+    debug = bool(config["dashboard"].get("debug", False))
+
+    logger.info(f"Starting dashboard on 0.0.0.0:{port}")
+    app.run(host="0.0.0.0", port=port, debug=debug)
 
