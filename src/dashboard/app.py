@@ -546,8 +546,15 @@ def search_comments():
 if __name__ == "__main__":
     import os
 
-    port = int(os.environ.get("PORT", 5000))
-    logger.info(f"Starting dashboard on 0.0.0.0:{port}")
-    app.run(host="0.0.0.0", port=port, debug=False)
+    port = int(os.environ.get("PORT", 10000))
+    print(f"[BOOT] Binding to 0.0.0.0:{port}", flush=True)
+
+    app.run(
+        host="0.0.0.0",
+        port=port,
+        debug=False,
+        use_reloader=False
+    )
+
 
 
