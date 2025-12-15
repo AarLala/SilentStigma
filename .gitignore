@@ -42,6 +42,20 @@ ENV/
 outputs/embeddings.npy
 outputs/*.npy
 
+# ---- Raw & intermediate data (ignore) ----
+outputs/*.npy
+outputs/embeddings.npy
+data/raw/
+data/intermediate/
+
+# ---- Allow dashboard-required outputs ----
+!outputs/processed_comments.csv
+!outputs/cluster_results.csv
+!outputs/cluster_statistics.csv
+!outputs/umap_projection.csv
+!outputs/cluster_*.json
+
+
 # Model files (large)
 models/
 *.bin
