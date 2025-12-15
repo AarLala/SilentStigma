@@ -546,9 +546,8 @@ def search_comments():
 if __name__ == "__main__":
     import os
 
-    port = int(os.environ.get("PORT", config["dashboard"]["port"]))
-    debug = bool(config["dashboard"].get("debug", False))
-
+    port = int(os.environ.get("PORT", 5000))
     logger.info(f"Starting dashboard on 0.0.0.0:{port}")
-    app.run(host="0.0.0.0", port=port, debug=debug)
+    app.run(host="0.0.0.0", port=port, debug=False)
+
 
