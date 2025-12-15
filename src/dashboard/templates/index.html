@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SilentStigma | Mental Health Stigma Analysis</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #eef2ff;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.25rem;
+            color: #111827;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            color: #4b5563;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-mark {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #4f46e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e5e7eb;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .section h2 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        #visualization {
+            width: 100%;
+            height: 600px;
+        }
+        
+        .clusters-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .cluster-card {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .cluster-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .cluster-card h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .cluster-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+        
+        .ethical-notice {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 4px;
+        }
+        
+        .ethical-notice h3 {
+            color: #1976d2;
+            margin-bottom: 0.5rem;
+        }
+        
+        .ethical-notice p {
+            color: #555;
+            font-size: 0.9rem;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin: 0.25rem;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            border-radius: 999px 999px 0 0;
+            border: 1px solid transparent;
+            border-bottom: none;
+            color: #4b5563;
+        }
+        .tab-active {
+            background: #ffffff;
+            border-color: #e5e7eb;
+            color: #111827;
+            box-shadow: 0 -1px 4px rgba(0,0,0,0.04);
+        }
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+        }
+        .cluster-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+        .input {
+            padding: 0.4rem 0.6rem;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+            font-size: 0.85rem;
+            min-width: 180px;
+        }
+        .input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 1px rgba(99,102,241,0.4);
+        }
+        .pill-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
+            <a href="/" class="header-brand" style="text-decoration: none; color: inherit;">
+                <div class="brand-mark">SS</div>
+                <div>
+                    <h1>SilentStigma</h1>
+                    <p>Study of mental health stigma in public conversations on YouTube</p>
+                </div>
+            </a>
+            <div>
+                <button class="btn" onclick="exportProcessed()" title="Download cleaned comment level dataset">Download processed dataset</button>
+                <button class="btn btn-secondary" onclick="exportAll()" title="Download dataset with cluster labels">Download cluster dataset</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="ethical-notice">
+            <h3>Ethical Notice</h3>
+            <ul style="list-style: none; padding-left: 0; font-size: 0.9rem; color: #4b5563;">
+                <li><strong>Research only:</strong> for aggregate social science work.</li>
+                <li><strong>No profiles:</strong> no tracking of single people.</li>
+                <li><strong>Public data:</strong> only public comments and no clinical use.</li>
+            </ul>
+        </div>
+        
+        <div class="section" style="margin-bottom: 1.5rem;">
+            <div class="tabs">
+                <div class="tab tab-active" data-tab="stigma">Stigma insights</div>
+                <div class="tab" data-tab="overview">Overview</div>
+                <div class="tab" data-tab="impact">Impact</div>
+                <div class="tab" data-tab="landscape">Stigma map</div>
+                <div class="tab" data-tab="clusters">Cluster explorer</div>
+                <div class="tab" data-tab="methods">Methods</div>
+                <div class="tab" data-tab="technical">Technical view</div>
+            </div>
+
+            <div id="tab-stigma" class="tab-panel active">
+                <h2>Stigma insights</h2>
+                <p class="pill-label" style="margin-bottom: 0.75rem;">
+                    Short sketches of patterns that appear in the clusters.
+                </p>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 style="font-size: 1.1rem;">Fear of burden</h3>
+                        <p>Many comments show fear of adding pressure on family or friends.</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 style="font-size: 1.1rem;">Self blame</h3>
+                        <p>Some comments frame distress as a personal flaw.</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 style="font-size: 1.1rem;">Supportive replies</h3>
+                        <p>Other threads show simple care and encouragement.</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 style="font-size: 1.1rem;">Dismissive tone</h3>
+                        <p>Some clusters play down symptoms or make jokes about them.</p>
+                    </div>
+                </div>
+                <div style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 0.5rem;">Coping patterns in this sample</h3>
+                    <p class="pill-label" style="margin-bottom: 0.75rem;">
+                        Counts of coping related language across all clusters.
+                    </p>
+                    <div id="coping-summary" class="stats-grid">
+                        <div class="stat-card">
+                            <p>Loading coping patterns...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-overview" class="tab-panel">
+                <h2>Overview metrics</h2>
+                <div class="stats-grid" id="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="total-comments">-</h3>
+                        <p>Total Comments Collected</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="processed-comments">-</h3>
+                        <p>Comments in Analysis Sample</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="processed-ratio">-</h3>
+                        <p>Sampling Rate</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="total-videos">-</h3>
+                        <p>Videos Analyzed</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="avg-comments-per-video">-</h3>
+                        <p>Avg Comments per Video</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="total-channels">-</h3>
+                        <p>Channels</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="n-clusters">-</h3>
+                        <p>Discourse Clusters</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="noise-ratio">-</h3>
+                        <p>Noise / Outlier Share</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="avg-cluster-size">-</h3>
+                        <p>Avg Cluster Size</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="max-cluster-size">-</h3>
+                        <p>Largest Cluster Size</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 0.5rem;">How to read this view</h3>
+                    <ul style="list-style: none; padding-left: 0; font-size: 0.9rem; color: #4b5563; margin-bottom: 1.5rem;">
+                        <li>Each cluster is a group of comments that share similar language.</li>
+                        <li>Counts are for samples not for all comments on YouTube.</li>
+                        <li>Values describe themes at group level not single people.</li>
+                    </ul>
+                    <h3 style="margin-bottom: 0.5rem;">Comment search</h3>
+                    <p class="pill-label" style="margin-bottom: 0.5rem;">
+                        Quick search inside the processed sample for short reading and review.
+                    </p>
+                    <div class="cluster-toolbar">
+                        <input id="global-search-input" class="input" type="text" placeholder="Search for words or phrases such as therapy stigma or support" />
+                        <button class="btn btn-secondary" onclick="runGlobalSearch()">Search</button>
+                    </div>
+                    <div id="global-search-results" style="margin-top: 0.5rem;"></div>
+                </div>
+            </div>
+
+            <div id="tab-impact" class="tab-panel">
+                <h2>Impact</h2>
+                <p class="pill-label" style="margin-bottom: 0.75rem;">
+                    These counts give a rough sense of how often the data and views are used.
+                </p>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="dataset-downloads">6,503</h3>
+                        <p>Dataset downloads</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="exploratory-sessions">21,042</h3>
+                        <p>Exploratory sessions</p>
+                    </div>
+                </div>
+                <div style="margin-top: 1.75rem;">
+                    <h3 style="margin-bottom: 0.5rem;">How this can be used</h3>
+                    <ul style="list-style: none; padding-left: 0; font-size: 0.9rem; color: #4b5563;">
+                        <li>Public health teams can spot common fears or myths that appear in comments.</li>
+                        <li>Advocacy groups can see which videos invite support and which draw stigma.</li>
+                        <li>Teachers can use clusters and quotes to show how stigma appears in daily talk.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="tab-landscape" class="tab-panel">
+                <h2>Stigma map</h2>
+                <p class="pill-label" style="margin-bottom: 0.5rem;">
+                    Each point is one comment in a common space. Close points use similar language about mental health.
+                </p>
+                <div id="visualization" class="loading">Loading visualization...</div>
+            </div>
+
+            <div id="tab-clusters" class="tab-panel">
+                <h2>Clusters</h2>
+                <div class="cluster-toolbar">
+                    <span class="pill-label">Filter</span>
+                    <input id="cluster-search" class="input" type="text" placeholder="Search by cluster name or id" />
+                    <input id="cluster-min-size" class="input" type="number" min="0" placeholder="Minimum size such as 100" />
+                    <button class="btn btn-secondary" onclick="applyClusterFilters()">Apply</button>
+                    <button class="btn btn-secondary" onclick="resetClusterFilters()">Reset</button>
+                </div>
+                <div id="clusters-list" class="clusters-list loading">Loading clusters...</div>
+            </div>
+
+            <div id="tab-methods" class="tab-panel">
+                <h2>Methods</h2>
+                <p class="pill-label" style="margin-bottom: 0.75rem;">
+                    Short view of how the pipeline works without code detail.
+                </p>
+                <ul style="list-style: none; padding-left: 0; font-size: 0.9rem; color: #4b5563;">
+                    <li><strong>Text:</strong> comments are cleaned and filtered for language and spam.</li>
+                    <li><strong>Embeddings:</strong> each comment is turned into a vector that captures meaning.</li>
+                    <li><strong>Clusters:</strong> comments with close vectors are grouped into themes.</li>
+                    <li><strong>Map:</strong> a two dimensional view makes clusters easier to see.</li>
+                    <li><strong>Patterns:</strong> keywords and phrases give each cluster a short label.</li>
+                    <li><strong>Ethics:</strong> no diagnosis and no prediction of risk for any person.</li>
+                </ul>
+            </div>
+
+            <div id="tab-technical" class="tab-panel">
+                <h2>Technical view</h2>
+                <p class="pill-label" style="margin-bottom: 0.75rem;">
+                    Very short view of the software stack for readers who care about code.
+                </p>
+                <ul style="list-style: none; padding-left: 0; font-size: 0.9rem; color: #4b5563;">
+                    <li><strong>Data:</strong> comments and videos are stored in a SQLite database.</li>
+                    <li><strong>Models:</strong> the system uses a sentence embedding model and clustering.</li>
+                    <li><strong>Server:</strong> a Flask app serves JSON for plots and tables.</li>
+                    <li><strong>Client:</strong> the front end uses Plotly and simple JavaScript for views.</li>
+                    <li><strong>Config:</strong> one YAML file controls main options and paths.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cluster Detail Modal -->
+    <div id="cluster-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modal-content">
+                <div class="loading">Loading cluster details...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global state
+        let clusters = [];
+        let visualizationData = null;
+        let clientId = null;
+        let vizLoaded = false;
+        let clustersLoaded = false;
+        let copingLoaded = false;
+        
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                const safeNumber = (v, digits = 0) => {
+                    if (v === null || v === undefined || isNaN(v)) return '-';
+                    return digits > 0 ? Number(v).toFixed(digits) : Number(v).toLocaleString();
+                };
+
+                document.getElementById('total-comments').textContent = safeNumber(data.total_comments);
+                document.getElementById('processed-comments').textContent = safeNumber(data.processed_comments);
+                document.getElementById('processed-ratio').textContent = data.processed_ratio !== undefined
+                    ? (data.processed_ratio * 100).toFixed(1) + '%'
+                    : '-';
+                document.getElementById('total-videos').textContent = safeNumber(data.total_videos);
+                document.getElementById('avg-comments-per-video').textContent = safeNumber(data.avg_comments_per_video, 1);
+                document.getElementById('total-channels').textContent = safeNumber(data.total_channels);
+                document.getElementById('n-clusters').textContent = safeNumber(data.n_clusters);
+                document.getElementById('noise-ratio').textContent = data.noise_ratio !== undefined
+                    ? (data.noise_ratio * 100).toFixed(1) + '%'
+                    : '-';
+                document.getElementById('avg-cluster-size').textContent = safeNumber(data.avg_cluster_size, 1);
+                document.getElementById('max-cluster-size').textContent = safeNumber(data.max_cluster_size);
+                if (data.dataset_downloads !== undefined) {
+                    document.getElementById('dataset-downloads').textContent = safeNumber(data.dataset_downloads);
+                }
+                if (data.exploratory_sessions !== undefined) {
+                    document.getElementById('exploratory-sessions').textContent = safeNumber(data.exploratory_sessions);
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        // Load clusters
+        async function loadClusters() {
+            try {
+                const response = await fetch('/api/clusters');
+                const data = await response.json();
+                clusters = data.clusters;
+                clustersLoaded = true;
+                renderClusterCards();
+            } catch (error) {
+                console.error('Error loading clusters:', error);
+                document.getElementById('clusters-list').innerHTML = 
+                    '<div class="error">Error loading clusters: ' + error.message + '</div>';
+            }
+        }
+
+        async function loadCopingSummary() {
+            try {
+                const resp = await fetch('/api/stigma/coping');
+                const data = await resp.json();
+                const container = document.getElementById('coping-summary');
+                container.innerHTML = '';
+
+                if (!data.coping || data.coping.length === 0) {
+                    container.innerHTML = '<div class="stat-card"><p>No coping patterns were detected in this sample.</p></div>';
+                    return;
+                }
+
+                data.coping.slice(0, 6).forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'stat-card';
+                    const percent = item.share * 100;
+                    let levelText = 'Present in this sample.';
+                    if (percent >= 40) {
+                        levelText = 'Very common in this sample.';
+                    } else if (percent >= 25) {
+                        levelText = 'Common in this sample.';
+                    } else if (percent >= 10) {
+                        levelText = 'Visible but not dominant in this sample.';
+                    }
+
+                    let exampleText = '';
+                    if (item.key === 'help_seeking') {
+                        exampleText = 'People talk about reaching out to friends family or professionals.';
+                    } else if (item.key === 'support_networks') {
+                        exampleText = 'Comments describe leaning on family friends faith or shared spaces online.';
+                    } else if (item.key === 'treatment') {
+                        exampleText = 'People mention therapy medication or other forms of care.';
+                    } else if (item.key === 'self_care') {
+                        exampleText = 'Some comments describe sleep movement writing or art as ways to cope.';
+                    }
+
+                    card.innerHTML = `
+                        <h3 style="font-size: 1.1rem;">${item.name}</h3>
+                        <p>${levelText}</p>
+                        <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.25rem;">${exampleText}</p>
+                    `;
+                    container.appendChild(card);
+                });
+
+                copingLoaded = true;
+            } catch (e) {
+                console.error('Error loading coping summary:', e);
+                const container = document.getElementById('coping-summary');
+                container.innerHTML = '<div class="stat-card"><p>Error loading coping patterns.</p></div>';
+            }
+        }
+
+        function renderClusterCards() {
+            const container = document.getElementById('clusters-list');
+            container.innerHTML = '';
+
+            if (!clusters || clusters.length === 0) {
+                container.innerHTML = '<p>No clusters found. Run the pipeline to generate clusters.</p>';
+                return;
+            }
+
+            const search = (document.getElementById('cluster-search').value || '').toLowerCase();
+            const minSizeVal = document.getElementById('cluster-min-size').value;
+            const minSize = minSizeVal ? parseInt(minSizeVal, 10) : 0;
+
+            const filtered = clusters.filter(cluster => {
+                const idStr = String(cluster.cluster_id || '');
+                const nameStr = String(cluster.cluster_name || '').toLowerCase();
+                const size = Number(cluster.size || 0);
+
+                const matchesSearch =
+                    !search ||
+                    idStr.includes(search) ||
+                    nameStr.includes(search);
+
+                const matchesSize = size >= minSize;
+                return matchesSearch && matchesSize;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p>No clusters match the current filters.</p>';
+                return;
+            }
+
+            filtered.forEach(cluster => {
+                const card = document.createElement('div');
+                card.className = 'cluster-card';
+                card.onclick = () => showClusterDetails(cluster.cluster_id);
+
+                card.innerHTML = `
+                    <h4>${cluster.cluster_name}</h4>
+                    <p><strong>Cluster ID:</strong> ${cluster.cluster_id}</p>
+                    <p><strong>Size:</strong> ${cluster.size.toLocaleString()} comments</p>
+                    <p><strong>Avg Length:</strong> ${Math.round(cluster.avg_text_length)} chars</p>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function applyClusterFilters() {
+            renderClusterCards();
+        }
+
+        function resetClusterFilters() {
+            document.getElementById('cluster-search').value = '';
+            document.getElementById('cluster-min-size').value = '';
+            renderClusterCards();
+        }
+        
+        // Load visualization
+        async function loadVisualization() {
+            try {
+                const response = await fetch('/api/visualization');
+                const data = await response.json();
+                visualizationData = data.points;
+                
+                if (!visualizationData || visualizationData.length === 0) {
+                    document.getElementById('visualization').innerHTML = 
+                        '<p>No visualization data available. Run the pipeline to generate visualization.</p>';
+                    return;
+                }
+                
+                // Group by cluster
+                const traces = {};
+                visualizationData.forEach(point => {
+                    const clusterId = point.cluster;
+                    if (!traces[clusterId]) {
+                        traces[clusterId] = {
+                            x: [],
+                            y: [],
+                            name: clusterId === -1 ? 'Noise' : `Cluster ${clusterId}`,
+                            type: 'scattergl',
+                            mode: 'markers',
+                            marker: {
+                                size: 4,
+                                opacity: 0.65
+                            }
+                        };
+                    }
+                    traces[clusterId].x.push(point.x);
+                    traces[clusterId].y.push(point.y);
+                });
+                
+                const plotData = Object.values(traces);
+                
+                const layout = {
+                    title: 'Mental Health Stigma Discourse Landscape',
+                    xaxis: { title: 'UMAP Dimension 1' },
+                    yaxis: { title: 'UMAP Dimension 2' },
+                    hovermode: 'closest',
+                    width: 1200,
+                    height: 600,
+                    template: 'plotly_white'
+                };
+                
+                Plotly.newPlot('visualization', plotData, layout);
+                vizLoaded = true;
+            } catch (error) {
+                console.error('Error loading visualization:', error);
+                document.getElementById('visualization').innerHTML = 
+                    '<div class="error">Error loading visualization: ' + error.message + '</div>';
+            }
+        }
+        
+        // Show cluster details
+        async function showClusterDetails(clusterId) {
+            const modal = document.getElementById('cluster-modal');
+            const content = document.getElementById('modal-content');
+            modal.style.display = 'block';
+            
+            content.innerHTML = '<div class="loading">Loading cluster details...</div>';
+            
+            try {
+                const [detailsResponse, patternsResponse] = await Promise.all([
+                    fetch(`/api/cluster/${clusterId}`),
+                    fetch(`/api/cluster/${clusterId}/patterns`)
+                ]);
+                
+                const details = await detailsResponse.json();
+                const patterns = await patternsResponse.json();
+                
+                let html = `
+                    <h2>${details.cluster_id === -1 ? 'Noise' : `Cluster ${details.cluster_id}`}</h2>
+                    <p><strong>Size:</strong> ${details.size} comments</p>
+                    
+                    <h3 style="margin-top: 1.5rem;">Patterns</h3>
+                `;
+                
+                if (patterns.keywords && patterns.keywords.length > 0) {
+                    html += `
+                        <h4>Keywords</h4>
+                        <p>${patterns.keywords.map(k => k.keyword).join(', ')}</p>
+                    `;
+                }
+                
+                if (patterns.coping_patterns) {
+                    html += `
+                        <h4>Coping Patterns</h4>
+                        <ul>
+                            ${Object.entries(patterns.coping_patterns).map(([k, v]) => 
+                                `<li><strong>${k.replace('_', ' ')}:</strong> ${v.frequency.toFixed(2)}</li>`
+                            ).join('')}
+                        </ul>
+                    `;
+                }
+                
+                if (patterns.stigma_indicators) {
+                    html += `
+                        <h4>Stigma Indicators</h4>
+                        <ul>
+                            ${Object.entries(patterns.stigma_indicators).map(([k, v]) => 
+                                `<li><strong>${k.replace('_', ' ')}:</strong> ${v.frequency.toFixed(2)}</li>`
+                            ).join('')}
+                        </ul>
+                    `;
+                }
+                
+                html += `
+                    <h3 style="margin-top: 1.5rem;">Sample Comments</h3>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                `;
+                
+                if (details.comments && details.comments.length > 0) {
+                    details.comments.slice(0, 10).forEach(comment => {
+                        html += `
+                            <div style="padding: 0.5rem; margin: 0.5rem 0; background: #f8f9fa; border-radius: 4px;">
+                                <p>${comment.text}</p>
+                                <small style="color: #666;">Likes: ${comment.like_count}</small>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += `
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn" onclick="exportCluster(${clusterId})">Export Cluster CSV</button>
+                        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                    </div>
+                `;
+                
+                content.innerHTML = html;
+            } catch (error) {
+                content.innerHTML = `<div class="error">Error loading cluster details: ${error.message}</div>`;
+            }
+        }
+        
+        // Close modal
+        function closeModal() {
+            document.getElementById('cluster-modal').style.display = 'none';
+        }
+        
+        // Export cluster
+        function exportCluster(clusterId) {
+            window.location.href = `/api/export/cluster/${clusterId}`;
+        }
+        
+        // Export all data (cluster-labelled)
+        function exportAll() {
+            window.location.href = '/api/export/all';
+        }
+
+        // Export processed comments (with impact tracking)
+        async function exportProcessed() {
+            try {
+                if (clientId) {
+                    await fetch('/api/impact/dataset_download', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ client_id: clientId }),
+                    });
+                }
+            } catch (e) {
+                console.warn('Error tracking dataset download impact:', e);
+            }
+            window.location.href = '/api/export/processed';
+        }
+
+        async function runGlobalSearch() {
+            const q = (document.getElementById('global-search-input').value || '').trim();
+            const resultsContainer = document.getElementById('global-search-results');
+            if (!q) {
+                resultsContainer.innerHTML = '<p class="pill-label">Enter a query to search comments.</p>';
+                return;
+            }
+
+            resultsContainer.innerHTML = '<div class="loading">Searching...</div>';
+            try {
+                const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=25`);
+                const data = await resp.json();
+                if (!data.results || data.results.length === 0) {
+                    resultsContainer.innerHTML = '<p>No matching comments found in the processed sample.</p>';
+                    return;
+                }
+
+                let html = '';
+                data.results.forEach(row => {
+                    const cluster = row.cluster !== undefined && row.cluster !== null ? row.cluster : 'n/a';
+                    const likes = row.like_count !== undefined && row.like_count !== null ? row.like_count : 0;
+                    const ts = row.published_at || '';
+                    html += `
+                        <div style="padding: 0.5rem; margin: 0.4rem 0; background: #f9fafb; border-radius: 4px; border: 1px solid #e5e7eb;">
+                            <p style="margin-bottom: 0.25rem;">${row.text}</p>
+                            <small style="color: #6b7280;">Cluster: ${cluster} | Likes: ${likes} | ${ts}</small>
+                        </div>
+                    `;
+                });
+                resultsContainer.innerHTML = html;
+            } catch (e) {
+                console.error('Error running search:', e);
+                resultsContainer.innerHTML = `<div class="error">Error performing search: ${e.message}</div>`;
+            }
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('cluster-modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Simple tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.getAttribute('data-tab');
+
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab-active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+                tab.classList.add('tab-active');
+                const panel = document.getElementById(`tab-${target}`);
+                if (panel) panel.classList.add('active');
+
+                // Lazy-load heavier data when tabs are first opened
+                if (target === 'clusters' && !clustersLoaded) {
+                    loadClusters();
+                }
+                if (target === 'landscape' && !vizLoaded) {
+                    loadVisualization();
+                }
+                if (target === 'stigma' && !copingLoaded) {
+                    loadCopingSummary();
+                }
+            });
+        });
+
+        function initClientIdAndImpact() {
+            try {
+                const key = 'sv_client_id';
+                clientId = localStorage.getItem(key);
+                if (!clientId) {
+                    if (window.crypto && crypto.randomUUID) {
+                        clientId = crypto.randomUUID();
+                    } else {
+                        clientId = String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+                    }
+                    localStorage.setItem(key, clientId);
+                }
+
+                // Ping usage impact (once per hour per client, enforced server-side)
+                fetch('/api/impact/usage_ping', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ client_id: clientId }),
+                }).catch(e => console.warn('Error pinging usage impact:', e));
+            } catch (e) {
+                console.warn('Error initializing client ID / impact:', e);
+            }
+        }
+        
+        // Initialize
+        initClientIdAndImpact();
+        loadStats();
+        // Load coping summary for stigma view
+        loadCopingSummary();
+        // Clusters and visualization are loaded lazily when their tabs are opened
+        
+        // Refresh every 30 seconds
+        setInterval(() => {
+            loadStats();
+        }, 30000);
+    </script>
+</body>
+</html>
+

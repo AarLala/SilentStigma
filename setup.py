@@ -1,0 +1,36 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="silencevoice",
+    version="1.0.0",
+    description="Unsupervised NLP research platform for analyzing mental health stigma through YouTube comments",
+    author="SilenceVoice Team",
+    packages=find_packages(),
+    install_requires=[
+        "sentence-transformers>=2.2.0",
+        "transformers>=4.30.0",
+        "torch>=2.0.0",
+        "numpy>=1.24.0",
+        "scikit-learn>=1.3.0",
+        "pandas>=2.0.0",
+        "hdbscan>=0.8.33",
+        "umap-learn>=0.5.4",
+        "nltk>=3.8.1",
+        "spacy>=3.6.0",
+        "keybert>=0.7.0",
+        "langdetect>=1.0.9",
+        "google-api-python-client>=2.100.0",
+        "google-auth-httplib2>=0.1.1",
+        "google-auth-oauthlib>=1.1.0",
+        "flask>=3.0.0",
+        "flask-cors>=4.0.0",
+        "plotly>=5.17.0",
+        "python-dotenv>=1.0.0",
+        "tqdm>=4.66.0",
+        "pyyaml>=6.0.1",
+        "python-dateutil>=2.8.2",
+        "sqlalchemy>=2.0.20",
+    ],
+    python_requires=">=3.8",
+)
+

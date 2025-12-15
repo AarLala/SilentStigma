@@ -1,0 +1,80 @@
+# SilenceVoice Platform Configuration
+
+# YouTube API Configuration
+youtube:
+  api_key: ""  # Set via environment variable YOUTUBE_API_KEY
+  max_results_per_channel: 10000
+  max_comments_per_video: 200
+  request_delay: 0.1  # seconds between API requests
+
+# Mental Health Channel IDs (Top advocacy channels with high engagement)
+channels:
+  - name: "Cinema Therapy"
+    id: "UCCYX4s1DCn51Hpf1peHS30Q"
+  - name: "Therapy in a Nutshell"
+    id: "UCpuqYFKLkcEryEieomiAv3Q"
+  - name: "Mowing For Mental Health"
+    id: "UC4NqBqzx22CWmxyAc7K9RKA"
+  - name: "Ellen Frank Speech Therapy"
+    id: "UC43s5m8fu80-BJyp-JhQ9Xw"
+  - name: "MANSA Mental Health & Wellness"
+    id: "UCUPoCP-G0MzpXjkYGxqTNpg"
+  - name: "Mental Health Treatment"
+    id: "UCMtEZ-f6mI9yRXrh2NzX9cw"
+
+# Data Processing
+processing:
+  min_comment_length: 10
+  max_comment_length: 1000
+  supported_languages: ["en"]  # ISO 639-1 codes
+  remove_urls: true
+  remove_emojis: false  # Keep emojis for emotional analysis
+  deduplication_threshold: 0.95  # Similarity threshold for duplicates
+  skip_semantic_dedup_if_large: true  # Skip semantic dedup if > 50K texts (memory optimization)
+
+# NLP Models
+models:
+  sentence_transformer: "all-MiniLM-L6-v2"  # Fast and efficient
+  # Alternative: "all-mpnet-base-v2" for better quality (slower)
+  # spacy_model: "en_core_web_sm"  # Optional - not currently used
+
+# Clustering
+clustering:
+  min_cluster_size: 50
+  min_samples: 10
+  cluster_selection_epsilon: 0.0
+  metric: "euclidean"
+
+# UMAP Visualization
+umap:
+  n_neighbors: 15
+  n_components: 2
+  min_dist: 0.1
+  metric: "cosine"
+  random_state: 42
+
+# KeyBERT Pattern Extraction
+keybert:
+  top_n: 10
+  diversity: 0.5
+  use_mmr: true
+
+# Dashboard
+dashboard:
+  host: "127.0.0.1"
+  port: 5000
+  debug: false
+  max_results_display: 1000
+
+# Database
+database:
+  path: "data/silencevoice.db"
+  backup_enabled: true
+
+# Ethical Safeguards
+safeguards:
+  aggregate_only: true
+  no_individual_tracking: true
+  no_diagnosis: true
+  public_data_only: true
+

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SilentStigma - Home</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #eef2ff;
+            color: #111827;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+        .hero {
+            max-width: 960px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 2.5rem 2.25rem;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.10);
+            border: 1px solid #e5e7eb;
+        }
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #111827;
+            letter-spacing: -0.02em;
+        }
+        .hero-subtitle {
+            font-size: 1.15rem;
+            max-width: 640px;
+            color: #4b5563;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+        .btn-primary {
+            background: #111827;
+            color: #ffffff;
+            border: none;
+            padding: 0.9rem 1.8rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover {
+            background: #374151;
+        }
+        .btn-outline {
+            background: #ffffff;
+            color: #111827;
+            border: 2px solid #111827;
+            padding: 0.9rem 1.6rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-outline:hover {
+            background: #f9fafb;
+        }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 2rem;
+            align-items: flex-start;
+        }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.4rem 0.9rem;
+            border-radius: 999px;
+            border: 1px solid #e0e7ff;
+            font-size: 0.75rem;
+            margin-bottom: 1rem;
+            color: #4338ca;
+            background: #e0e7ff;
+        }
+        .pill-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            margin-right: 0.5rem;
+        }
+        .card {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 2rem;
+            border: 1px solid #e5e7eb;
+        }
+        .card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            color: #111827;
+            font-weight: 600;
+        }
+        .card p {
+            font-size: 0.9rem;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+        .card ul {
+            list-style: none;
+            margin-top: 0.5rem;
+        }
+        .card li {
+            font-size: 0.9rem;
+            color: #4b5563;
+            margin-bottom: 0.5rem;
+            padding-left: 1rem;
+            position: relative;
+        }
+        .card li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #9ca3af;
+        }
+        .meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        .meta-chip {
+            padding: 0.4rem 0.85rem;
+            border-radius: 6px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        @media (max-width: 900px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="hero">
+        <div class="hero-grid">
+            <section>
+                <div class="pill">
+                    <span class="pill-dot"></span>
+                    Research only | aggregate and unsupervised analysis
+                </div>
+                <h1 class="hero-title">SilentStigma</h1>
+                <p class="hero-subtitle">
+                    SilentStigma is an observatory for mental health discourse in public comments. It groups related comments into themes without labeling individuals.
+                </p>
+                <div class="hero-actions">
+                    <button class="btn-primary" onclick="window.location.href='/dashboard'">
+                        Open Stigma Landscape Dashboard
+                    </button>
+                    <button class="btn-outline" onclick="window.location.href='/api/export/processed'">
+                        Download Processed Dataset
+                    </button>
+                </div>
+            </section>
+        </div>
+        <section style="margin-top: 2rem;">
+            <div class="card">
+                <h3>What you can explore</h3>
+                <ul>
+                    <li>Comment and video metrics for mental health channels</li>
+                    <li>A two dimensional map of discourse clusters</li>
+                    <li>Keywords and patterns that summarize each cluster</li>
+                    <li>CSV exports for your own quantitative analysis</li>
+                </ul>
+                <h3 style="margin-top: 1rem;">Why this is useful</h3>
+                <p>
+                    SilentStigma lets you see how people talk about mental health at scale without deciding in advance which topics matter. It surfaces patterns in public comments in a way that is transparent and ready for further research.
+                </p>
+                <p style="margin-top: 0.5rem;">
+                    For individuals it offers a structured way to read how others describe their experiences which can make it easier to feel less alone and to find language for their own stories.
+                </p>
+                <h3 style="margin-top: 1rem;">Designed for</h3>
+                <ul>
+                    <li>Computational social scientists</li>
+                    <li>Mental health communication researchers</li>
+                    <li>Methodologists exploring unsupervised pipelines</li>
+                </ul>
+                <div class="meta-row">
+                    <div class="meta-chip">Unsupervised clustering</div>
+                    <div class="meta-chip">Sentence BERT embeddings</div>
+                    <div class="meta-chip">KeyBERT pattern extraction</div>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
+
+
