@@ -1,0 +1,103 @@
+{
+  "size": 194,
+  "keywords": [
+    {
+      "keyword": "prejudice bridget",
+      "score": 0.6161
+    },
+    {
+      "keyword": "hilarious darcy",
+      "score": 0.4042
+    },
+    {
+      "keyword": "jones likable",
+      "score": 0.3265
+    },
+    {
+      "keyword": "book personality",
+      "score": 0.2816
+    },
+    {
+      "keyword": "displays humility",
+      "score": 0.2703
+    },
+    {
+      "keyword": "movie buffs",
+      "score": 0.2515
+    },
+    {
+      "keyword": "acting like",
+      "score": 0.2276
+    },
+    {
+      "keyword": "relationship incredible",
+      "score": 0.2081
+    },
+    {
+      "keyword": "totally agree",
+      "score": 0.1911
+    },
+    {
+      "keyword": "reader inserts",
+      "score": 0.1257
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 3,
+      "frequency": 0.015463917525773196
+    },
+    "self_care": {
+      "count": 1,
+      "frequency": 0.005154639175257732
+    },
+    "support_networks": {
+      "count": 4,
+      "frequency": 0.020618556701030927
+    },
+    "treatment": {
+      "count": 1,
+      "frequency": 0.005154639175257732
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 2,
+      "frequency": 0.010309278350515464
+    },
+    "fear": {
+      "count": 3,
+      "frequency": 0.015463917525773196
+    },
+    "dismissal": {
+      "count": 4,
+      "frequency": 0.020618556701030927
+    },
+    "normalization": {
+      "count": 3,
+      "frequency": 0.015463917525773196
+    },
+    "self_blame": {
+      "count": 1,
+      "frequency": 0.005154639175257732
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 4,
+      "frequency": 0.020618556701030927
+    },
+    "negative": {
+      "count": 5,
+      "frequency": 0.02577319587628866
+    },
+    "anxiety": {
+      "count": 3,
+      "frequency": 0.015463917525773196
+    },
+    "depression": {
+      "count": 6,
+      "frequency": 0.030927835051546393
+    }
+  }
+}

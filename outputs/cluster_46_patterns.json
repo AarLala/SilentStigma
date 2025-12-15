@@ -1,0 +1,103 @@
+{
+  "size": 872,
+  "keywords": [
+    {
+      "keyword": "therapy videos",
+      "score": 0.5602
+    },
+    {
+      "keyword": "greatful videos",
+      "score": 0.4392
+    },
+    {
+      "keyword": "sent video",
+      "score": 0.3422
+    },
+    {
+      "keyword": "love healing",
+      "score": 0.3394
+    },
+    {
+      "keyword": "helping great",
+      "score": 0.3323
+    },
+    {
+      "keyword": "thankyou sharing",
+      "score": 0.3136
+    },
+    {
+      "keyword": "emma thanks",
+      "score": 0.2574
+    },
+    {
+      "keyword": "39 grateful",
+      "score": 0.2511
+    },
+    {
+      "keyword": "feel comforted",
+      "score": 0.21
+    },
+    {
+      "keyword": "reminders difficulty",
+      "score": 0.1882
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 7,
+      "frequency": 0.008027522935779817
+    },
+    "self_care": {
+      "count": 2,
+      "frequency": 0.0022935779816513763
+    },
+    "support_networks": {
+      "count": 6,
+      "frequency": 0.006880733944954129
+    },
+    "treatment": {
+      "count": 5,
+      "frequency": 0.005733944954128441
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 4,
+      "frequency": 0.0045871559633027525
+    },
+    "dismissal": {
+      "count": 2,
+      "frequency": 0.0022935779816513763
+    },
+    "normalization": {
+      "count": 2,
+      "frequency": 0.0022935779816513763
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 7,
+      "frequency": 0.008027522935779817
+    },
+    "negative": {
+      "count": 1,
+      "frequency": 0.0011467889908256881
+    },
+    "anxiety": {
+      "count": 2,
+      "frequency": 0.0022935779816513763
+    },
+    "depression": {
+      "count": 1,
+      "frequency": 0.0011467889908256881
+    }
+  }
+}

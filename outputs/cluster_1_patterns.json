@@ -1,0 +1,103 @@
+{
+  "size": 128,
+  "keywords": [
+    {
+      "keyword": "azula abused",
+      "score": 0.62
+    },
+    {
+      "keyword": "zuko character",
+      "score": 0.5499
+    },
+    {
+      "keyword": "villain therapy",
+      "score": 0.4042
+    },
+    {
+      "keyword": "chloe",
+      "score": 0.3602
+    },
+    {
+      "keyword": "ingrained child",
+      "score": 0.3472
+    },
+    {
+      "keyword": "perfect daughter",
+      "score": 0.2963
+    },
+    {
+      "keyword": "age iroh",
+      "score": 0.247
+    },
+    {
+      "keyword": "grandmother death",
+      "score": 0.2301
+    },
+    {
+      "keyword": "arc reunite",
+      "score": 0.1853
+    },
+    {
+      "keyword": "agree imo",
+      "score": 0.1713
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 3,
+      "frequency": 0.0234375
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 5,
+      "frequency": 0.0390625
+    },
+    "treatment": {
+      "count": 1,
+      "frequency": 0.0078125
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 2,
+      "frequency": 0.015625
+    },
+    "fear": {
+      "count": 1,
+      "frequency": 0.0078125
+    },
+    "dismissal": {
+      "count": 3,
+      "frequency": 0.0234375
+    },
+    "normalization": {
+      "count": 3,
+      "frequency": 0.0234375
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 3,
+      "frequency": 0.0234375
+    },
+    "negative": {
+      "count": 1,
+      "frequency": 0.0078125
+    },
+    "anxiety": {
+      "count": 1,
+      "frequency": 0.0078125
+    },
+    "depression": {
+      "count": 1,
+      "frequency": 0.0078125
+    }
+  }
+}

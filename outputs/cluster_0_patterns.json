@@ -1,0 +1,103 @@
+{
+  "size": 55,
+  "keywords": [
+    {
+      "keyword": "reborn jesus",
+      "score": 0.5265
+    },
+    {
+      "keyword": "sacrifice sins",
+      "score": 0.4758
+    },
+    {
+      "keyword": "gift salvation",
+      "score": 0.4349
+    },
+    {
+      "keyword": "christ loves",
+      "score": 0.4089
+    },
+    {
+      "keyword": "heaven does",
+      "score": 0.4024
+    },
+    {
+      "keyword": "gospel br",
+      "score": 0.3955
+    },
+    {
+      "keyword": "die judgment",
+      "score": 0.3698
+    },
+    {
+      "keyword": "corinthians 17",
+      "score": 0.321
+    },
+    {
+      "keyword": "pay debt",
+      "score": 0.3028
+    },
+    {
+      "keyword": "read john",
+      "score": 0.2754
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "treatment": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 1,
+      "frequency": 0.01818181818181818
+    },
+    "fear": {
+      "count": 2,
+      "frequency": 0.03636363636363636
+    },
+    "dismissal": {
+      "count": 2,
+      "frequency": 0.03636363636363636
+    },
+    "normalization": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 1,
+      "frequency": 0.01818181818181818
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

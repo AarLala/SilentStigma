@@ -1,0 +1,103 @@
+{
+  "size": 95,
+  "keywords": [
+    {
+      "keyword": "thank sharing",
+      "score": 0.4035
+    },
+    {
+      "keyword": "sharing beautiful",
+      "score": 0.308
+    },
+    {
+      "keyword": "ladies sharing",
+      "score": 0.2012
+    },
+    {
+      "keyword": "thank work",
+      "score": 0.1876
+    },
+    {
+      "keyword": "wow good",
+      "score": 0.1793
+    },
+    {
+      "keyword": "great job",
+      "score": 0.1566
+    },
+    {
+      "keyword": "love",
+      "score": 0.144
+    },
+    {
+      "keyword": "sharing kindness",
+      "score": 0.1242
+    },
+    {
+      "keyword": "sharing gb",
+      "score": 0.1165
+    },
+    {
+      "keyword": "amazing thanks",
+      "score": 0.0666
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 1,
+      "frequency": 0.010526315789473684
+    },
+    "treatment": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "dismissal": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "normalization": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

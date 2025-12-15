@@ -1,0 +1,103 @@
+{
+  "size": 50,
+  "keywords": [
+    {
+      "keyword": "distinction ocd",
+      "score": 0.671
+    },
+    {
+      "keyword": "learned ocpd",
+      "score": 0.4379
+    },
+    {
+      "keyword": "questioning things",
+      "score": 0.2187
+    },
+    {
+      "keyword": "39 interesting",
+      "score": 0.1695
+    },
+    {
+      "keyword": "things organized",
+      "score": 0.1377
+    },
+    {
+      "keyword": "everyday constant",
+      "score": 0.1178
+    },
+    {
+      "keyword": "causes panic",
+      "score": 0.107
+    },
+    {
+      "keyword": "definitely helpful",
+      "score": 0.0986
+    },
+    {
+      "keyword": "media needs",
+      "score": 0.0746
+    },
+    {
+      "keyword": "mentalhealth href",
+      "score": 0.0648
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 5,
+      "frequency": 0.1
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 1,
+      "frequency": 0.02
+    },
+    "treatment": {
+      "count": 4,
+      "frequency": 0.08
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 2,
+      "frequency": 0.04
+    },
+    "dismissal": {
+      "count": 3,
+      "frequency": 0.06
+    },
+    "normalization": {
+      "count": 1,
+      "frequency": 0.02
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 4,
+      "frequency": 0.08
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 2,
+      "frequency": 0.04
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

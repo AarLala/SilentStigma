@@ -1,0 +1,103 @@
+{
+  "size": 52,
+  "keywords": [
+    {
+      "keyword": "work andy",
+      "score": 0.4462
+    },
+    {
+      "keyword": "miranda criticism",
+      "score": 0.3805
+    },
+    {
+      "keyword": "career retaliation",
+      "score": 0.3733
+    },
+    {
+      "keyword": "ceo behavior",
+      "score": 0.3072
+    },
+    {
+      "keyword": "herm stress",
+      "score": 0.3055
+    },
+    {
+      "keyword": "treats emily",
+      "score": 0.3054
+    },
+    {
+      "keyword": "fashion ridiculous",
+      "score": 0.2694
+    },
+    {
+      "keyword": "understanding friends",
+      "score": 0.2403
+    },
+    {
+      "keyword": "nate doesn",
+      "score": 0.1928
+    },
+    {
+      "keyword": "chained phone",
+      "score": 0.1743
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 4,
+      "frequency": 0.07692307692307693
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 2,
+      "frequency": 0.038461538461538464
+    },
+    "treatment": {
+      "count": 2,
+      "frequency": 0.038461538461538464
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 1,
+      "frequency": 0.019230769230769232
+    },
+    "fear": {
+      "count": 1,
+      "frequency": 0.019230769230769232
+    },
+    "dismissal": {
+      "count": 3,
+      "frequency": 0.057692307692307696
+    },
+    "normalization": {
+      "count": 5,
+      "frequency": 0.09615384615384616
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 4,
+      "frequency": 0.07692307692307693
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 2,
+      "frequency": 0.038461538461538464
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "size": 119,
+  "keywords": [
+    {
+      "keyword": "sharing awww",
+      "score": 0.3598
+    },
+    {
+      "keyword": "awesome awww",
+      "score": 0.3433
+    },
+    {
+      "keyword": "39 amazing",
+      "score": 0.2724
+    },
+    {
+      "keyword": "sooo sweet",
+      "score": 0.2698
+    },
+    {
+      "keyword": "cutest baby",
+      "score": 0.2559
+    },
+    {
+      "keyword": "beautiful love",
+      "score": 0.2453
+    },
+    {
+      "keyword": "incredible ugh",
+      "score": 0.2449
+    },
+    {
+      "keyword": "thanks watching",
+      "score": 0.2408
+    },
+    {
+      "keyword": "haha",
+      "score": 0.1332
+    },
+    {
+      "keyword": "ridiculously",
+      "score": 0.0882
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 1,
+      "frequency": 0.008403361344537815
+    },
+    "treatment": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "dismissal": {
+      "count": 1,
+      "frequency": 0.008403361344537815
+    },
+    "normalization": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

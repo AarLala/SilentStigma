@@ -1,0 +1,103 @@
+{
+  "size": 86,
+  "keywords": [
+    {
+      "keyword": "beautiful transformation",
+      "score": 0.4846
+    },
+    {
+      "keyword": "beautiful work",
+      "score": 0.4471
+    },
+    {
+      "keyword": "absolutely stunning",
+      "score": 0.4076
+    },
+    {
+      "keyword": "great outstanding",
+      "score": 0.3945
+    },
+    {
+      "keyword": "turned super",
+      "score": 0.2487
+    },
+    {
+      "keyword": "job absolutely",
+      "score": 0.2413
+    },
+    {
+      "keyword": "wow did",
+      "score": 0.2209
+    },
+    {
+      "keyword": "merry christmas",
+      "score": 0.2198
+    },
+    {
+      "keyword": "br",
+      "score": 0.1356
+    },
+    {
+      "keyword": "sharing videos",
+      "score": 0.0285
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 1,
+      "frequency": 0.011627906976744186
+    },
+    "treatment": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "dismissal": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "normalization": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

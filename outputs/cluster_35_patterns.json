@@ -1,0 +1,103 @@
+{
+  "size": 61,
+  "keywords": [
+    {
+      "keyword": "thank thank",
+      "score": 0.2758
+    },
+    {
+      "keyword": "thank thanks",
+      "score": 0.2503
+    },
+    {
+      "keyword": "thank",
+      "score": 0.212
+    },
+    {
+      "keyword": "thanks thanks",
+      "score": 0.1948
+    },
+    {
+      "keyword": "thanks mom",
+      "score": 0.1211
+    },
+    {
+      "keyword": "thanks emma",
+      "score": 0.12
+    },
+    {
+      "keyword": "thanks mate",
+      "score": 0.1012
+    },
+    {
+      "keyword": "mate",
+      "score": 0.0321
+    },
+    {
+      "keyword": "mom",
+      "score": 0.0211
+    },
+    {
+      "keyword": "emma",
+      "score": 0.0023
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "treatment": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "dismissal": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "normalization": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

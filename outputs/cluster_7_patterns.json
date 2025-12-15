@@ -1,0 +1,103 @@
+{
+  "size": 67,
+  "keywords": [
+    {
+      "keyword": "film superman",
+      "score": 0.7143
+    },
+    {
+      "keyword": "opinions superman",
+      "score": 0.6903
+    },
+    {
+      "keyword": "reeve favorite",
+      "score": 0.5481
+    },
+    {
+      "keyword": "listen clark",
+      "score": 0.4039
+    },
+    {
+      "keyword": "kent man",
+      "score": 0.3622
+    },
+    {
+      "keyword": "agree portrayal",
+      "score": 0.2995
+    },
+    {
+      "keyword": "loved christopher",
+      "score": 0.2937
+    },
+    {
+      "keyword": "humanities noble",
+      "score": 0.1811
+    },
+    {
+      "keyword": "cell research",
+      "score": 0.1743
+    },
+    {
+      "keyword": "advocating disabilities",
+      "score": 0.164
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 2,
+      "frequency": 0.029850746268656716
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 2,
+      "frequency": 0.029850746268656716
+    },
+    "treatment": {
+      "count": 1,
+      "frequency": 0.014925373134328358
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 3,
+      "frequency": 0.04477611940298507
+    },
+    "fear": {
+      "count": 2,
+      "frequency": 0.029850746268656716
+    },
+    "dismissal": {
+      "count": 2,
+      "frequency": 0.029850746268656716
+    },
+    "normalization": {
+      "count": 1,
+      "frequency": 0.014925373134328358
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 3,
+      "frequency": 0.04477611940298507
+    },
+    "negative": {
+      "count": 1,
+      "frequency": 0.014925373134328358
+    },
+    "anxiety": {
+      "count": 1,
+      "frequency": 0.014925373134328358
+    },
+    "depression": {
+      "count": 1,
+      "frequency": 0.014925373134328358
+    }
+  }
+}

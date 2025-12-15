@@ -1,0 +1,103 @@
+{
+  "size": 53,
+  "keywords": [
+    {
+      "keyword": "doing okay",
+      "score": 0.3394
+    },
+    {
+      "keyword": "asking doing",
+      "score": 0.3269
+    },
+    {
+      "keyword": "friend doing",
+      "score": 0.3023
+    },
+    {
+      "keyword": "mind asking",
+      "score": 0.2213
+    },
+    {
+      "keyword": "girl doing",
+      "score": 0.1945
+    },
+    {
+      "keyword": "hope",
+      "score": 0.1507
+    },
+    {
+      "keyword": "friend",
+      "score": 0.1501
+    },
+    {
+      "keyword": "today",
+      "score": 0.1321
+    },
+    {
+      "keyword": "dear",
+      "score": 0.1314
+    },
+    {
+      "keyword": "don",
+      "score": 0.1268
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "treatment": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "dismissal": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "normalization": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 1,
+      "frequency": 0.018867924528301886
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

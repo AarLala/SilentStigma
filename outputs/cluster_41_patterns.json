@@ -1,0 +1,103 @@
+{
+  "size": 206,
+  "keywords": [
+    {
+      "keyword": "videos tyler",
+      "score": 0.5197
+    },
+    {
+      "keyword": "enjoy video",
+      "score": 0.4711
+    },
+    {
+      "keyword": "amazing work",
+      "score": 0.4246
+    },
+    {
+      "keyword": "thankyou stay",
+      "score": 0.4237
+    },
+    {
+      "keyword": "doing wonderful",
+      "score": 0.4002
+    },
+    {
+      "keyword": "upload superb",
+      "score": 0.3835
+    },
+    {
+      "keyword": "man inspiring",
+      "score": 0.2886
+    },
+    {
+      "keyword": "job love",
+      "score": 0.2753
+    },
+    {
+      "keyword": "amazingly yard",
+      "score": 0.2682
+    },
+    {
+      "keyword": "just wow",
+      "score": 0.2345
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 1,
+      "frequency": 0.0048543689320388345
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 1,
+      "frequency": 0.0048543689320388345
+    },
+    "treatment": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "dismissal": {
+      "count": 1,
+      "frequency": 0.0048543689320388345
+    },
+    "normalization": {
+      "count": 1,
+      "frequency": 0.0048543689320388345
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 2,
+      "frequency": 0.009708737864077669
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

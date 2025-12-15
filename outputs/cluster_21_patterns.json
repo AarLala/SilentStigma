@@ -1,0 +1,103 @@
+{
+  "size": 99,
+  "keywords": [
+    {
+      "keyword": "breathing meditation",
+      "score": 0.6514
+    },
+    {
+      "keyword": "thoughts anxiety",
+      "score": 0.5153
+    },
+    {
+      "keyword": "relax daily",
+      "score": 0.5052
+    },
+    {
+      "keyword": "stress overthinking",
+      "score": 0.4973
+    },
+    {
+      "keyword": "overthinking negative",
+      "score": 0.3669
+    },
+    {
+      "keyword": "avoid moving",
+      "score": 0.3055
+    },
+    {
+      "keyword": "practice reacting",
+      "score": 0.2892
+    },
+    {
+      "keyword": "avoid constipation",
+      "score": 0.2785
+    },
+    {
+      "keyword": "alternate nostril",
+      "score": 0.2283
+    },
+    {
+      "keyword": "alirosenbusch151 reduce",
+      "score": 0.0985
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 3,
+      "frequency": 0.030303030303030304
+    },
+    "self_care": {
+      "count": 4,
+      "frequency": 0.04040404040404041
+    },
+    "support_networks": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "treatment": {
+      "count": 2,
+      "frequency": 0.020202020202020204
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 1,
+      "frequency": 0.010101010101010102
+    },
+    "dismissal": {
+      "count": 3,
+      "frequency": 0.030303030303030304
+    },
+    "normalization": {
+      "count": 1,
+      "frequency": 0.010101010101010102
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 3,
+      "frequency": 0.030303030303030304
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 1,
+      "frequency": 0.010101010101010102
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

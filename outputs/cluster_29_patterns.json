@@ -1,0 +1,103 @@
+{
+  "size": 96,
+  "keywords": [
+    {
+      "keyword": "love loved",
+      "score": 0.3736
+    },
+    {
+      "keyword": "love love",
+      "score": 0.3603
+    },
+    {
+      "keyword": "love",
+      "score": 0.358
+    },
+    {
+      "keyword": "loved",
+      "score": 0.3043
+    },
+    {
+      "keyword": "thank love",
+      "score": 0.3031
+    },
+    {
+      "keyword": "love thank",
+      "score": 0.2941
+    },
+    {
+      "keyword": "episode love",
+      "score": 0.2519
+    },
+    {
+      "keyword": "loved episode",
+      "score": 0.1654
+    },
+    {
+      "keyword": "thank",
+      "score": 0.1396
+    },
+    {
+      "keyword": "episode",
+      "score": 0.0138
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "treatment": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "dismissal": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "normalization": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

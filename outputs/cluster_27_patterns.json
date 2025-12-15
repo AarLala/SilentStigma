@@ -1,0 +1,103 @@
+{
+  "size": 82,
+  "keywords": [
+    {
+      "keyword": "thanks watching",
+      "score": 0.4308
+    },
+    {
+      "keyword": "hope enjoyed",
+      "score": 0.3434
+    },
+    {
+      "keyword": "pleasure thanks",
+      "score": 0.3247
+    },
+    {
+      "keyword": "liked thanks",
+      "score": 0.2837
+    },
+    {
+      "keyword": "glad",
+      "score": 0.2273
+    },
+    {
+      "keyword": "watching love",
+      "score": 0.1359
+    },
+    {
+      "keyword": "sharing comment",
+      "score": 0.089
+    },
+    {
+      "keyword": "got",
+      "score": 0.0773
+    },
+    {
+      "keyword": "hi",
+      "score": 0.0657
+    },
+    {
+      "keyword": "agree",
+      "score": 0.0451
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 1,
+      "frequency": 0.012195121951219513
+    },
+    "treatment": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "dismissal": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "normalization": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 1,
+      "frequency": 0.012195121951219513
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

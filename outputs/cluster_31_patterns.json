@@ -1,0 +1,95 @@
+{
+  "size": 91,
+  "keywords": [
+    {
+      "keyword": "heaps thanks",
+      "score": 0.4055
+    },
+    {
+      "keyword": "heaps mate",
+      "score": 0.354
+    },
+    {
+      "keyword": "thanks heaps",
+      "score": 0.3522
+    },
+    {
+      "keyword": "mate thanks",
+      "score": 0.2631
+    },
+    {
+      "keyword": "thanks mate",
+      "score": 0.2619
+    },
+    {
+      "keyword": "heaps",
+      "score": 0.2161
+    },
+    {
+      "keyword": "mate",
+      "score": 0.1971
+    },
+    {
+      "keyword": "thanks",
+      "score": 0.1702
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "treatment": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "dismissal": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "normalization": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

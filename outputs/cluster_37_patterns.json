@@ -1,0 +1,103 @@
+{
+  "size": 71,
+  "keywords": [
+    {
+      "keyword": "thank trish",
+      "score": 0.2594
+    },
+    {
+      "keyword": "sister thank",
+      "score": 0.2586
+    },
+    {
+      "keyword": "emma thank",
+      "score": 0.2461
+    },
+    {
+      "keyword": "thank thank",
+      "score": 0.2393
+    },
+    {
+      "keyword": "thank sister",
+      "score": 0.235
+    },
+    {
+      "keyword": "thank",
+      "score": 0.2222
+    },
+    {
+      "keyword": "thank emma",
+      "score": 0.2205
+    },
+    {
+      "keyword": "trish",
+      "score": 0.1903
+    },
+    {
+      "keyword": "sister",
+      "score": 0.1353
+    },
+    {
+      "keyword": "emma",
+      "score": 0.1186
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "treatment": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "dismissal": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "normalization": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "size": 266,
+  "keywords": [
+    {
+      "keyword": "helped thank",
+      "score": 0.3615
+    },
+    {
+      "keyword": "thanks super",
+      "score": 0.2792
+    },
+    {
+      "keyword": "sooooo helpful",
+      "score": 0.2532
+    },
+    {
+      "keyword": "posting helpful",
+      "score": 0.2108
+    },
+    {
+      "keyword": "thankyou really",
+      "score": 0.2097
+    },
+    {
+      "keyword": "kindly thank",
+      "score": 0.2011
+    },
+    {
+      "keyword": "lt super",
+      "score": 0.0866
+    },
+    {
+      "keyword": "dang",
+      "score": 0.0686
+    },
+    {
+      "keyword": "amazingly",
+      "score": 0.0464
+    },
+    {
+      "keyword": "sooooo",
+      "score": 0.0414
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 1,
+      "frequency": 0.0037593984962406013
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "treatment": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "dismissal": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "normalization": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "depression": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  }
+}

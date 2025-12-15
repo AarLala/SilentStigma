@@ -1,0 +1,103 @@
+{
+  "size": 55,
+  "keywords": [
+    {
+      "keyword": "loki amazing",
+      "score": 0.6044
+    },
+    {
+      "keyword": "loved series",
+      "score": 0.38
+    },
+    {
+      "keyword": "acting storytelling",
+      "score": 0.2585
+    },
+    {
+      "keyword": "cell asgard",
+      "score": 0.2243
+    },
+    {
+      "keyword": "t9r criticism",
+      "score": 0.214
+    },
+    {
+      "keyword": "agree definitely",
+      "score": 0.2015
+    },
+    {
+      "keyword": "geeking visual",
+      "score": 0.1911
+    },
+    {
+      "keyword": "nightmarish bureaucracy",
+      "score": 0.1393
+    },
+    {
+      "keyword": "literally begins",
+      "score": 0.1311
+    },
+    {
+      "keyword": "impostor syndrome",
+      "score": 0.0905
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 2,
+      "frequency": 0.03636363636363636
+    },
+    "self_care": {
+      "count": 1,
+      "frequency": 0.01818181818181818
+    },
+    "support_networks": {
+      "count": 3,
+      "frequency": 0.05454545454545454
+    },
+    "treatment": {
+      "count": 1,
+      "frequency": 0.01818181818181818
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 1,
+      "frequency": 0.01818181818181818
+    },
+    "fear": {
+      "count": 2,
+      "frequency": 0.03636363636363636
+    },
+    "dismissal": {
+      "count": 3,
+      "frequency": 0.05454545454545454
+    },
+    "normalization": {
+      "count": 1,
+      "frequency": 0.01818181818181818
+    },
+    "self_blame": {
+      "count": 2,
+      "frequency": 0.03636363636363636
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 4,
+      "frequency": 0.07272727272727272
+    },
+    "negative": {
+      "count": 1,
+      "frequency": 0.01818181818181818
+    },
+    "anxiety": {
+      "count": 2,
+      "frequency": 0.03636363636363636
+    },
+    "depression": {
+      "count": 2,
+      "frequency": 0.03636363636363636
+    }
+  }
+}

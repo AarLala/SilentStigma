@@ -1,0 +1,103 @@
+{
+  "size": 456,
+  "keywords": [
+    {
+      "keyword": "joking href",
+      "score": 0.6208
+    },
+    {
+      "keyword": "timestamp href",
+      "score": 0.5513
+    },
+    {
+      "keyword": "39 href",
+      "score": 0.5
+    },
+    {
+      "keyword": "movies href",
+      "score": 0.4884
+    },
+    {
+      "keyword": "comments just",
+      "score": 0.3162
+    },
+    {
+      "keyword": "quote bar",
+      "score": 0.3069
+    },
+    {
+      "keyword": "editor note",
+      "score": 0.2776
+    },
+    {
+      "keyword": "love videos",
+      "score": 0.2363
+    },
+    {
+      "keyword": "huntercormier8139 read",
+      "score": 0.2178
+    },
+    {
+      "keyword": "time introspection",
+      "score": 0.1735
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 4,
+      "frequency": 0.008771929824561403
+    },
+    "self_care": {
+      "count": 3,
+      "frequency": 0.006578947368421052
+    },
+    "support_networks": {
+      "count": 4,
+      "frequency": 0.008771929824561403
+    },
+    "treatment": {
+      "count": 2,
+      "frequency": 0.0043859649122807015
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 2,
+      "frequency": 0.0043859649122807015
+    },
+    "fear": {
+      "count": 3,
+      "frequency": 0.006578947368421052
+    },
+    "dismissal": {
+      "count": 2,
+      "frequency": 0.0043859649122807015
+    },
+    "normalization": {
+      "count": 3,
+      "frequency": 0.006578947368421052
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 2,
+      "frequency": 0.0043859649122807015
+    },
+    "negative": {
+      "count": 2,
+      "frequency": 0.0043859649122807015
+    },
+    "anxiety": {
+      "count": 4,
+      "frequency": 0.008771929824561403
+    },
+    "depression": {
+      "count": 4,
+      "frequency": 0.008771929824561403
+    }
+  }
+}

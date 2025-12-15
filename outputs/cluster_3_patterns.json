@@ -1,0 +1,103 @@
+{
+  "size": 107,
+  "keywords": [
+    {
+      "keyword": "bullied judy",
+      "score": 0.5496
+    },
+    {
+      "keyword": "nick believed",
+      "score": 0.4662
+    },
+    {
+      "keyword": "fox prejudice",
+      "score": 0.3828
+    },
+    {
+      "keyword": "family connections",
+      "score": 0.2978
+    },
+    {
+      "keyword": "accountability kink",
+      "score": 0.2649
+    },
+    {
+      "keyword": "advocated interviewed",
+      "score": 0.2504
+    },
+    {
+      "keyword": "astrid struggling",
+      "score": 0.2182
+    },
+    {
+      "keyword": "standing child",
+      "score": 0.1926
+    },
+    {
+      "keyword": "major differences",
+      "score": 0.1776
+    },
+    {
+      "keyword": "understandable reactions",
+      "score": 0.1273
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 3,
+      "frequency": 0.028037383177570093
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 5,
+      "frequency": 0.04672897196261682
+    },
+    "treatment": {
+      "count": 1,
+      "frequency": 0.009345794392523364
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 4,
+      "frequency": 0.037383177570093455
+    },
+    "fear": {
+      "count": 5,
+      "frequency": 0.04672897196261682
+    },
+    "dismissal": {
+      "count": 3,
+      "frequency": 0.028037383177570093
+    },
+    "normalization": {
+      "count": 1,
+      "frequency": 0.009345794392523364
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 3,
+      "frequency": 0.028037383177570093
+    },
+    "negative": {
+      "count": 1,
+      "frequency": 0.009345794392523364
+    },
+    "anxiety": {
+      "count": 3,
+      "frequency": 0.028037383177570093
+    },
+    "depression": {
+      "count": 2,
+      "frequency": 0.018691588785046728
+    }
+  }
+}

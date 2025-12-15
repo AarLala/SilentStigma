@@ -1,0 +1,103 @@
+{
+  "size": 55,
+  "keywords": [
+    {
+      "keyword": "manage tinnitus",
+      "score": 0.7173
+    },
+    {
+      "keyword": "reduction ringing",
+      "score": 0.4476
+    },
+    {
+      "keyword": "hearing hope",
+      "score": 0.3016
+    },
+    {
+      "keyword": "bereavement anxiety",
+      "score": 0.2643
+    },
+    {
+      "keyword": "catastrophise experience",
+      "score": 0.2627
+    },
+    {
+      "keyword": "cure xanax",
+      "score": 0.2555
+    },
+    {
+      "keyword": "wax removal",
+      "score": 0.2539
+    },
+    {
+      "keyword": "symptoms disappear",
+      "score": 0.2413
+    },
+    {
+      "keyword": "chronic pain",
+      "score": 0.2402
+    },
+    {
+      "keyword": "counsel change",
+      "score": 0.1665
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 4,
+      "frequency": 0.07272727272727272
+    },
+    "self_care": {
+      "count": 2,
+      "frequency": 0.03636363636363636
+    },
+    "support_networks": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "treatment": {
+      "count": 3,
+      "frequency": 0.05454545454545454
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 4,
+      "frequency": 0.07272727272727272
+    },
+    "dismissal": {
+      "count": 2,
+      "frequency": 0.03636363636363636
+    },
+    "normalization": {
+      "count": 2,
+      "frequency": 0.03636363636363636
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 2,
+      "frequency": 0.03636363636363636
+    },
+    "negative": {
+      "count": 1,
+      "frequency": 0.01818181818181818
+    },
+    "anxiety": {
+      "count": 4,
+      "frequency": 0.07272727272727272
+    },
+    "depression": {
+      "count": 1,
+      "frequency": 0.01818181818181818
+    }
+  }
+}

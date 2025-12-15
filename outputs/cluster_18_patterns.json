@@ -1,0 +1,103 @@
+{
+  "size": 123,
+  "keywords": [
+    {
+      "keyword": "crying movie",
+      "score": 0.5502
+    },
+    {
+      "keyword": "beautiful movie",
+      "score": 0.4859
+    },
+    {
+      "keyword": "movie father",
+      "score": 0.4572
+    },
+    {
+      "keyword": "heartbreaking wonderful",
+      "score": 0.42
+    },
+    {
+      "keyword": "movie favorites",
+      "score": 0.3834
+    },
+    {
+      "keyword": "enjoyed scene",
+      "score": 0.329
+    },
+    {
+      "keyword": "love palpable",
+      "score": 0.2596
+    },
+    {
+      "keyword": "39 amazing",
+      "score": 0.2205
+    },
+    {
+      "keyword": "dad absolutely",
+      "score": 0.2156
+    },
+    {
+      "keyword": "haha everytime",
+      "score": 0.1421
+    }
+  ],
+  "coping_patterns": {
+    "help_seeking": {
+      "count": 1,
+      "frequency": 0.008130081300813009
+    },
+    "self_care": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "support_networks": {
+      "count": 2,
+      "frequency": 0.016260162601626018
+    },
+    "treatment": {
+      "count": 1,
+      "frequency": 0.008130081300813009
+    }
+  },
+  "stigma_indicators": {
+    "shame": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "fear": {
+      "count": 4,
+      "frequency": 0.032520325203252036
+    },
+    "dismissal": {
+      "count": 2,
+      "frequency": 0.016260162601626018
+    },
+    "normalization": {
+      "count": 2,
+      "frequency": 0.016260162601626018
+    },
+    "self_blame": {
+      "count": 0,
+      "frequency": 0.0
+    }
+  },
+  "emotional_language": {
+    "positive": {
+      "count": 4,
+      "frequency": 0.032520325203252036
+    },
+    "negative": {
+      "count": 0,
+      "frequency": 0.0
+    },
+    "anxiety": {
+      "count": 2,
+      "frequency": 0.016260162601626018
+    },
+    "depression": {
+      "count": 1,
+      "frequency": 0.008130081300813009
+    }
+  }
+}
