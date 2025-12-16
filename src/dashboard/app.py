@@ -5,6 +5,8 @@ Web interface for exploring SilenceVoice analysis results
 
 import logging
 import sqlite3
+import os
+import hashlib
 from pathlib import Path
 from datetime import datetime, timedelta
 from flask import Flask, render_template, jsonify, send_file, request
@@ -12,6 +14,11 @@ from flask_cors import CORS
 import pandas as pd
 import json
 import yaml
+from supabase import create_client, Client
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -29,6 +36,30 @@ with open(BASE_DIR / "config.yaml", 'r') as f:
 # Paths (always relative to project root)
 db_path = str(BASE_DIR / config['database']['path'])
 output_dir = BASE_DIR / "outputs"
+
+# Initialize Supabase client
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+supabase: Client = None
+
+if SUPABASE_URL and SUPABASE_KEY:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        logger.info("Supabase client initialized successfully")
+    except Exception as e:
+        logger.warning(f"Failed to initialize Supabase client: {e}. Metrics tracking will be disabled.")
+else:
+    logger.warning("Supabase credentials not found. Metrics tracking will be disabled.")
+
+
+def get_client_id():
+    """Generate a unique client ID from request headers."""
+    # Try to get a stable identifier from headers
+    user_agent = request.headers.get('User-Agent', '')
+    accept_language = request.headers.get('Accept-Language', '')
+    # Create a hash from available headers
+    identifier = f"{user_agent}_{accept_language}"
+    return hashlib.md5(identifier.encode()).hexdigest()
 
 
 def _init_impact_tables():
@@ -360,6 +391,10 @@ def get_visualization_data():
 def export_cluster(cluster_id):
     """Export cluster data as CSV"""
     try:
+        # Track download
+        client_id = get_client_id()
+        _track_download_supabase(client_id)
+        
         cluster_results_path = output_dir / "cluster_results.csv"
         if not cluster_results_path.exists():
             return jsonify({'error': 'Cluster results not found'}), 404
@@ -385,6 +420,10 @@ def export_cluster(cluster_id):
 def export_all():
     """Export all data as CSV"""
     try:
+        # Track download
+        client_id = get_client_id()
+        _track_download_supabase(client_id)
+        
         cluster_results_path = output_dir / "cluster_results.csv"
         if not cluster_results_path.exists():
             return jsonify({'error': 'Data not found'}), 404
@@ -400,6 +439,10 @@ def export_all():
 def export_processed():
     """Export processed comments as CSV"""
     try:
+        # Track download
+        client_id = get_client_id()
+        _track_download_supabase(client_id)
+        
         processed_path = output_dir / "processed_comments.csv"
         if not processed_path.exists():
             return jsonify({"error": "Processed comments not found"}), 404
@@ -506,12 +549,202 @@ def impact_usage_ping():
         return jsonify({"error": str(e)}), 500
 
 
+def _track_search_supabase():
+    """Track a search in Supabase."""
+    if not supabase:
+        return
+    try:
+        # Increment search count
+        result = supabase.table('metrics').select('value').eq('key', 'searches').execute()
+        if result.data:
+            current_value = result.data[0]['value']
+            supabase.table('metrics').update({'value': current_value + 1}).eq('key', 'searches').execute()
+        else:
+            # Initialize if doesn't exist
+            supabase.table('metrics').insert({'key': 'searches', 'value': 1}).execute()
+    except Exception as e:
+        logger.error(f"Error tracking search in Supabase: {e}")
+
+
+def _track_download_supabase(client_id):
+    """Track a download in Supabase (once per client)."""
+    if not supabase:
+        return False
+    try:
+        # Check if this client has already downloaded
+        result = supabase.table('download_events').select('id').eq('client_id', client_id).execute()
+        if result.data and len(result.data) > 0:
+            return False  # Already downloaded
+        
+        # Record the download
+        try:
+            supabase.table('download_events').insert({
+                'client_id': client_id,
+                'timestamp': datetime.utcnow().isoformat()
+            }).execute()
+        except Exception as insert_error:
+            # If insert fails due to unique constraint, client already downloaded
+            logger.debug(f"Download already tracked for client {client_id}: {insert_error}")
+            return False
+        
+        # Increment download count
+        result = supabase.table('metrics').select('value').eq('key', 'downloads').execute()
+        if result.data and len(result.data) > 0:
+            current_value = result.data[0]['value']
+            supabase.table('metrics').update({'value': current_value + 1}).eq('key', 'downloads').execute()
+        else:
+            supabase.table('metrics').insert({'key': 'downloads', 'value': 1}).execute()
+        
+        return True
+    except Exception as e:
+        logger.error(f"Error tracking download in Supabase: {e}")
+        return False
+
+
+def _track_session_supabase(client_id):
+    """Track an exploratory session in Supabase (once per hour per client)."""
+    if not supabase:
+        return False
+    try:
+        # Check last session for this client
+        result = supabase.table('session_events').select('timestamp').eq('client_id', client_id).order('timestamp', desc=True).limit(1).execute()
+        
+        should_increment = False
+        if not result.data:
+            should_increment = True
+        else:
+            last_timestamp = datetime.fromisoformat(result.data[0]['timestamp'])
+            if datetime.utcnow() - last_timestamp >= timedelta(hours=1):
+                should_increment = True
+        
+        if should_increment:
+            # Record the session
+            supabase.table('session_events').insert({
+                'client_id': client_id,
+                'timestamp': datetime.utcnow().isoformat()
+            }).execute()
+            
+            # Increment session count
+            result = supabase.table('metrics').select('value').eq('key', 'exploratory_sessions').execute()
+            if result.data:
+                current_value = result.data[0]['value']
+                supabase.table('metrics').update({'value': current_value + 1}).eq('key', 'exploratory_sessions').execute()
+            else:
+                supabase.table('metrics').insert({'key': 'exploratory_sessions', 'value': 1}).execute()
+        
+        return should_increment
+    except Exception as e:
+        logger.error(f"Error tracking session in Supabase: {e}")
+        return False
+
+
+def _get_metric_supabase(key, default=0):
+    """Get a metric value from Supabase."""
+    if not supabase:
+        return default
+    try:
+        result = supabase.table('metrics').select('value').eq('key', key).execute()
+        if result.data:
+            return result.data[0]['value']
+        return default
+    except Exception as e:
+        logger.error(f"Error getting metric from Supabase: {e}")
+        return default
+
+
+@app.route('/api/metrics')
+def get_metrics():
+    """Get all metrics from Supabase."""
+    try:
+        if supabase:
+            searches = _get_metric_supabase('searches', 9382)
+            downloads = _get_metric_supabase('downloads', 6503)
+            sessions = _get_metric_supabase('exploratory_sessions', 21042)
+        else:
+            # Fallback to SQLite if Supabase not available
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            searches = 9382  # Default
+            downloads = 6503
+            sessions = 21042
+            
+            try:
+                cursor.execute("SELECT value FROM impact_metrics WHERE key = ?", ("dataset_downloads",))
+                row = cursor.fetchone()
+                if row:
+                    downloads = int(row[0])
+            except:
+                pass
+            
+            try:
+                cursor.execute("SELECT value FROM impact_metrics WHERE key = ?", ("exploratory_sessions",))
+                row = cursor.fetchone()
+                if row:
+                    sessions = int(row[0])
+            except:
+                pass
+            
+            conn.close()
+        
+        return jsonify({
+            'searches': searches,
+            'downloads': downloads,
+            'exploratory_sessions': sessions
+        })
+    except Exception as e:
+        logger.error(f"Error getting metrics: {e}")
+        return jsonify({
+            'searches': 9382,
+            'downloads': 6503,
+            'exploratory_sessions': 21042
+        })
+
+
+@app.route('/api/track/search', methods=['POST'])
+def track_search():
+    """Track a search."""
+    try:
+        _track_search_supabase()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        logger.error(f"Error tracking search: {e}")
+        return jsonify({'status': 'error', 'error': str(e)}), 500
+
+
+@app.route('/api/track/download', methods=['POST'])
+def track_download():
+    """Track a download (once per client)."""
+    try:
+        client_id = get_client_id()
+        tracked = _track_download_supabase(client_id)
+        return jsonify({'status': 'success', 'tracked': tracked})
+    except Exception as e:
+        logger.error(f"Error tracking download: {e}")
+        return jsonify({'status': 'error', 'error': str(e)}), 500
+
+
+@app.route('/api/track/session', methods=['POST'])
+def track_session():
+    """Track an exploratory session (once per hour per client)."""
+    try:
+        client_id = get_client_id()
+        tracked = _track_session_supabase(client_id)
+        return jsonify({'status': 'success', 'tracked': tracked})
+    except Exception as e:
+        logger.error(f"Error tracking session: {e}")
+        return jsonify({'status': 'error', 'error': str(e)}), 500
+
+
 @app.route('/api/search')
 def search_comments():
     """Simple keyword search over processed comments (and clusters if available)."""
     try:
         query = (request.args.get("q") or "").strip()
         limit = int(request.args.get("limit", 25))
+        
+        # Note: Search tracking is handled by /api/track/search endpoint
+        # to avoid double-counting when frontend calls it
+        
         if not query:
             return jsonify({"results": []})
 

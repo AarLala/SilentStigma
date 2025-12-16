@@ -36,3 +36,6 @@ python-dateutil>=2.8.2
 sqlalchemy>=2.0.20
 # Note: sqlite3 is built-in to Python, no installation needed
 
+# Supabase
+supabase>=2.0.0
+

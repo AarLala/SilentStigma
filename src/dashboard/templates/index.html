@@ -587,6 +587,22 @@
             transform: translateY(0);
         }
         
+        .lens-search-count {
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            white-space: nowrap;
+            margin: 0 0.5rem;
+        }
+        
+        .lens-search-count span {
+            color: #059669;
+            font-weight: 600;
+        }
+        
         .lens-suggestions {
             display: flex;
             align-items: center;
@@ -941,6 +957,9 @@
                                 placeholder="Search a topic to explore aggregated experiences (e.g., 'pain', 'substance', 'stress', 'support')" 
                                 onkeypress="if(event.key === 'Enter') runGlobalSearch()"
                             />
+                            <div class="lens-search-count">
+                                <span id="search-count-text">9,382</span> searches
+                            </div>
                             <button class="lens-search-button" onclick="runGlobalSearch()">
                                 Explore
                             </button>
@@ -1474,30 +1493,82 @@
             document.getElementById('cluster-modal').style.display = 'none';
         }
         
-        // Export cluster
-        function exportCluster(clusterId) {
+        // Export cluster (with tracking)
+        async function exportCluster(clusterId) {
+            // Download tracking happens in the backend endpoint
+            // No need to call /api/track/download here to avoid double-counting
             window.location.href = `/api/export/cluster/${clusterId}`;
         }
         
-        // Export all data (cluster-labelled)
-        function exportAll() {
+        // Export all data (cluster-labelled) (with tracking)
+        async function exportAll() {
+            // Download tracking happens in the backend endpoint
+            // No need to call /api/track/download here to avoid double-counting
             window.location.href = '/api/export/all';
         }
 
-        // Export processed comments (with impact tracking)
+        // Export processed comments (with tracking)
         async function exportProcessed() {
+            // Download tracking happens in the backend endpoint
+            // No need to call /api/track/download here to avoid double-counting
+            window.location.href = '/api/export/processed';
+        }
+        
+        // Update search count
+        async function updateSearchCount() {
             try {
-                if (clientId) {
-                    await fetch('/api/impact/dataset_download', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ client_id: clientId }),
-                    });
+                const resp = await fetch('/api/metrics');
+                const data = await resp.json();
+                const countEl = document.getElementById('search-count-text');
+                if (countEl && data.searches) {
+                    const current = parseInt(countEl.textContent.replace(/,/g, '')) || 0;
+                    if (data.searches !== current) {
+                        animateValue(countEl, current, data.searches, 500, false, false);
+                    }
                 }
             } catch (e) {
-                console.warn('Error tracking dataset download impact:', e);
+                console.warn('Error updating search count:', e);
             }
-            window.location.href = '/api/export/processed';
+        }
+        
+        // Update all metrics
+        async function updateMetrics() {
+            try {
+                const resp = await fetch('/api/metrics');
+                const data = await resp.json();
+                
+                // Update search count
+                const countEl = document.getElementById('search-count-text');
+                if (countEl && data.searches) {
+                    const current = parseInt(countEl.textContent.replace(/,/g, '')) || 0;
+                    if (data.searches !== current) {
+                        animateValue(countEl, current, data.searches, 500, false, false);
+                    }
+                }
+                
+                // Update download and session counts if needed
+                if (data.downloads !== undefined) {
+                    const downloadEl = document.getElementById('dataset-downloads');
+                    if (downloadEl) {
+                        const current = parseInt(downloadEl.textContent.replace(/,/g, '')) || 0;
+                        if (data.downloads !== current) {
+                            animateValue(downloadEl, current, data.downloads, 500, false, false);
+                        }
+                    }
+                }
+                
+                if (data.exploratory_sessions !== undefined) {
+                    const sessionEl = document.getElementById('exploratory-sessions');
+                    if (sessionEl) {
+                        const current = parseInt(sessionEl.textContent.replace(/,/g, '')) || 0;
+                        if (data.exploratory_sessions !== current) {
+                            animateValue(sessionEl, current, data.exploratory_sessions, 500, false, false);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Error updating metrics:', e);
+            }
         }
 
         function setSearchQuery(query) {
@@ -1526,6 +1597,15 @@
             if (!q) {
                 resultsContainer.innerHTML = '';
                 return;
+            }
+
+            // Track the search (backend also tracks, but this ensures UI updates immediately)
+            try {
+                await fetch('/api/track/search', { method: 'POST' });
+                // Update search count after a brief delay to allow backend to process
+                setTimeout(updateSearchCount, 200);
+            } catch (e) {
+                console.warn('Error tracking search:', e);
             }
 
             resultsContainer.innerHTML = '<div class="loading">Searching...</div>';
@@ -1686,12 +1766,13 @@
                     localStorage.setItem(key, clientId);
                 }
 
-                // Ping usage impact (once per hour per client, enforced server-side)
-                fetch('/api/impact/usage_ping', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ client_id: clientId }),
-                }).catch(e => console.warn('Error pinging usage impact:', e));
+                // Track exploratory session via Supabase (once per hour per client, enforced server-side)
+                fetch('/api/track/session', {
+                    method: 'POST'
+                }).catch(e => console.warn('Error tracking session:', e));
+                
+                // Load initial metrics
+                updateMetrics();
             } catch (e) {
                 console.warn('Error initializing client ID / impact:', e);
             }

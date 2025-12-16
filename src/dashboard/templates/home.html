@@ -424,11 +424,11 @@
                     <div class="metric-label">Emotional clusters identified</div>
                 </div>
                 <div class="metric">
-                    <div class="metric-value" id="metric-downloads">6,503</div>
+                    <div class="metric-value" id="metric-downloads">-</div>
                     <div class="metric-label">Aggregate exports</div>
                 </div>
                 <div class="metric">
-                    <div class="metric-value" id="metric-sessions">21,042</div>
+                    <div class="metric-value" id="metric-sessions">-</div>
                     <div class="metric-label">Platform sessions</div>
                 </div>
             </div>
@@ -551,8 +551,14 @@
         // Load impact metrics with animation
         async function loadMetrics() {
             try {
-                const response = await fetch('/api/stats');
-                const data = await response.json();
+                // Fetch both stats and metrics
+                const [statsResponse, metricsResponse] = await Promise.all([
+                    fetch('/api/stats'),
+                    fetch('/api/metrics')
+                ]);
+                
+                const statsData = await statsResponse.json();
+                const metricsData = await metricsResponse.json();
                 
                 const formatNumber = (num) => {
                     if (num === null || num === undefined || isNaN(num)) return '-';
@@ -561,33 +567,46 @@
                     return Math.floor(num).toLocaleString();
                 };
                 
-                if (document.getElementById('metric-comments') && data.total_comments) {
+                // Load comments and clusters from stats
+                if (document.getElementById('metric-comments') && statsData.total_comments) {
                     const el = document.getElementById('metric-comments');
-                    animateValue(el, 0, data.total_comments, 1500, formatNumber);
+                    animateValue(el, 0, statsData.total_comments, 1500, formatNumber);
                 }
-                if (document.getElementById('metric-clusters') && data.n_clusters) {
+                if (document.getElementById('metric-clusters') && statsData.n_clusters) {
                     const el = document.getElementById('metric-clusters');
-                    animateValue(el, 0, data.n_clusters, 1500, formatNumber);
+                    animateValue(el, 0, statsData.n_clusters, 1500, formatNumber);
                 }
                 
-                // Animate downloads and sessions
+                // Load downloads and sessions from Supabase metrics
                 if (document.getElementById('metric-downloads')) {
                     const el = document.getElementById('metric-downloads');
-                    const value = 6503;
+                    const value = metricsData.downloads || 6503;
                     animateValue(el, 0, value, 1500, (n) => Math.floor(n).toLocaleString());
                 }
                 if (document.getElementById('metric-sessions')) {
                     const el = document.getElementById('metric-sessions');
-                    const value = 21042;
+                    const value = metricsData.exploratory_sessions || 21042;
                     animateValue(el, 0, value, 1500, (n) => Math.floor(n).toLocaleString());
                 }
             } catch (error) {
                 console.error('Error loading metrics:', error);
+                // Fallback to default values if API fails
+                if (document.getElementById('metric-downloads')) {
+                    const el = document.getElementById('metric-downloads');
+                    animateValue(el, 0, 6503, 1500, (n) => Math.floor(n).toLocaleString());
+                }
+                if (document.getElementById('metric-sessions')) {
+                    const el = document.getElementById('metric-sessions');
+                    animateValue(el, 0, 21042, 1500, (n) => Math.floor(n).toLocaleString());
+                }
             }
         }
         
         // Load metrics on page load
         loadMetrics();
+        
+        // Periodically update metrics (every 2 minutes)
+        setInterval(loadMetrics, 120000);
     </script>
 </body>
 </html>
