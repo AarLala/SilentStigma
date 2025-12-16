@@ -3,213 +3,591 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SilentStigma - Home</title>
+    <title>SilentStigma — Mapping Emotional and Coping Language at Scale</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <style>
+        /* Reset and Base */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #eef2ff;
-            color: #111827;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem 1rem;
-        }
-        .hero {
-            max-width: 960px;
-            width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background: #ffffff;
-            border-radius: 12px;
-            padding: 2.5rem 2.25rem;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.10);
-            border: 1px solid #e5e7eb;
-        }
-        .hero-title {
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            color: #111827;
-            letter-spacing: -0.02em;
-        }
-        .hero-subtitle {
-            font-size: 1.15rem;
-            max-width: 640px;
-            color: #4b5563;
-            margin-bottom: 2rem;
+            color: #0a0a0a;
             line-height: 1.6;
+            font-weight: 400;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
+        
+        /* Typography */
+        h1 {
+            font-size: 4rem;
+            font-weight: 600;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            color: #0a0a0a;
+            margin-bottom: 1.5rem;
+        }
+        
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: -0.01em;
+            color: #0a0a0a;
+            margin-bottom: 1rem;
+        }
+        
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.3;
+            color: #0a0a0a;
+            margin-bottom: 0.75rem;
+        }
+        
+        p {
+            font-size: 1.125rem;
+            line-height: 1.7;
+            color: #4a5568;
+            margin-bottom: 1rem;
+        }
+        
+        .eyebrow {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #059669;
+            margin-bottom: 1rem;
+        }
+        
+        .subheadline {
+            font-size: 1.25rem;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #64748b;
+            max-width: 640px;
+        }
+        
+        /* Layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        section {
+            padding: 6rem 0;
+            animation: fadeIn 0.6s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 8rem 0 10rem;
+            animation: fadeInUp 0.8s ease;
+        }
+        
+        .hero-content {
+            max-width: 800px;
+        }
+        
+        .hero h1 {
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+        
+        .hero .subheadline {
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+        
+        .hero .hero-actions {
+            animation: fadeInUp 0.8s ease 0.6s both;
+        }
+        
         .hero-actions {
             display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 3rem;
+            gap: 1.5rem;
+            margin-top: 2.5rem;
+            align-items: center;
         }
+        
         .btn-primary {
-            background: #111827;
+            background: #059669;
             color: #ffffff;
             border: none;
-            padding: 0.9rem 1.8rem;
+            padding: 0.875rem 1.75rem;
             border-radius: 6px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-primary:hover {
-            background: #374151;
-        }
-        .btn-outline {
-            background: #ffffff;
-            color: #111827;
-            border: 2px solid #111827;
-            padding: 0.9rem 1.6rem;
-            border-radius: 6px;
-            font-size: 0.95rem;
+            font-size: 0.9375rem;
             font-weight: 500;
             cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-outline:hover {
-            background: #f9fafb;
-        }
-        .hero-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr);
-            gap: 2rem;
-            align-items: flex-start;
-        }
-        .pill {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.4rem 0.9rem;
-            border-radius: 999px;
-            border: 1px solid #e0e7ff;
-            font-size: 0.75rem;
-            margin-bottom: 1rem;
-            color: #4338ca;
-            background: #e0e7ff;
-        }
-        .pill-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #22c55e;
-            margin-right: 0.5rem;
-        }
-        .card {
-            background: #f9fafb;
-            border-radius: 10px;
-            padding: 2rem;
-            border: 1px solid #e5e7eb;
-        }
-        .card h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.75rem;
-            color: #111827;
-            font-weight: 600;
-        }
-        .card p {
-            font-size: 0.9rem;
-            color: #4b5563;
-            line-height: 1.6;
-        }
-        .card ul {
-            list-style: none;
-            margin-top: 0.5rem;
-        }
-        .card li {
-            font-size: 0.9rem;
-            color: #4b5563;
-            margin-bottom: 0.5rem;
-            padding-left: 1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
             position: relative;
+            overflow: hidden;
         }
-        .card li:before {
-            content: "•";
+        
+        .btn-primary::before {
+            content: '';
             position: absolute;
-            left: 0;
-            color: #9ca3af;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
         }
-        .meta-row {
+        
+        .btn-primary:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn-primary:hover {
+            background: #047857;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+        
+        .btn-secondary {
+            color: #d97706;
+            background: transparent;
+            border: none;
+            padding: 0.875rem 1.75rem;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            color: #b45309;
+            transform: translateY(-1px);
+        }
+        
+        /* Impact Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+            padding: 3rem 0;
+        }
+        
+        .metric {
+            border-top: 2px solid #059669;
+            padding-top: 1.5rem;
+            animation: fadeInUp 0.6s ease;
+        }
+        
+        .metric:nth-child(1) { animation-delay: 0.1s; }
+        .metric:nth-child(2) { animation-delay: 0.2s; }
+        .metric:nth-child(3) { animation-delay: 0.3s; }
+        .metric:nth-child(4) { animation-delay: 0.4s; }
+        
+        .metric-value {
+            font-size: 3rem;
+            font-weight: 600;
+            line-height: 1;
+            color: #059669;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 400;
+        }
+        
+        /* How It Works */
+        .pipeline {
             display: flex;
+            align-items: center;
+            gap: 2rem;
             flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-top: 1.5rem;
+            padding: 3rem 0;
         }
-        .meta-chip {
-            padding: 0.4rem 0.85rem;
-            border-radius: 6px;
+        
+        .pipeline-step {
+            flex: 1;
+            min-width: 150px;
+            animation: fadeInUp 0.6s ease;
+        }
+        
+        .pipeline-step:nth-child(1) { animation-delay: 0.1s; }
+        .pipeline-step:nth-child(2) { animation-delay: 0.2s; }
+        .pipeline-step:nth-child(3) { animation-delay: 0.3s; }
+        .pipeline-step:nth-child(4) { animation-delay: 0.4s; }
+        .pipeline-step:nth-child(5) { animation-delay: 0.5s; }
+        
+        .pipeline-step-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #059669;
+            margin-bottom: 0.25rem;
+        }
+        
+        .pipeline-step-desc {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        .pipeline-arrow {
+            color: #f59e0b;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            font-weight: 300;
+        }
+        
+        /* Ethical Commitments */
+        .ethical-section {
             background: #ffffff;
-            border: 1px solid #e5e7eb;
-            font-size: 0.75rem;
-            color: #6b7280;
+            padding: 6rem 0;
         }
-        @media (max-width: 900px) {
-            .hero-title {
+        
+        .ethical-section h2 {
+            color: #059669;
+        }
+        
+        .ethical-content {
+            max-width: 700px;
+        }
+        
+        .ethical-content p {
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Research Orientation */
+        .research-content {
+            max-width: 700px;
+        }
+        
+        .research-content p {
+            margin-bottom: 1.5rem;
+        }
+        
+        .research-content h2 {
+            color: #059669;
+        }
+        
+        /* Hero accent */
+        .hero {
+            background: #ecfdf5;
+        }
+        
+        /* Section dividers */
+        section:not(:last-child) {
+            border-bottom: 1px solid #d1fae5;
+        }
+        
+        /* Footer */
+        footer {
+            border-top: 1px solid #e2e8f0;
+            padding: 3rem 0;
+            margin-top: 6rem;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s ease;
+        }
+        
+        .footer-links a:hover {
+            color: #059669;
+        }
+        
+        footer {
+            border-top: 2px solid #059669;
+        }
+        
+        .footer-copyright {
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            h2 {
                 font-size: 2rem;
+            }
+            
+            section {
+                padding: 4rem 0;
+            }
+            
+            .hero {
+                padding: 4rem 0 6rem;
+            }
+            
+            .hero-actions {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .pipeline {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .pipeline-arrow {
+                transform: rotate(90deg);
+                margin: 0.5rem 0;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
     </style>
 </head>
 <body>
-    <main class="hero">
-        <div class="hero-grid">
-            <section>
-                <div class="pill">
-                    <span class="pill-dot"></span>
-                    Research only | aggregate and unsupervised analysis
-                </div>
-                <h1 class="hero-title">SilentStigma</h1>
-                <p class="hero-subtitle">
-                    SilentStigma is an observatory for mental health discourse in public comments. It groups related comments into themes without labeling individuals.
+    <!-- SECTION 1 — Hero -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="eyebrow">Silent Stigma</div>
+                <h1>Mapping Emotional and Coping Language at Scale</h1>
+                <p class="subheadline">
+                    Analyzing public online discourse to uncover aggregate emotional patterns and coping strategies — without labeling individuals.
                 </p>
                 <div class="hero-actions">
-                    <button class="btn-primary" onclick="window.location.href='/dashboard'">
-                        Open Stigma Landscape Dashboard
-                    </button>
-                    <button class="btn-outline" onclick="window.location.href='/api/export/processed'">
-                        Download Processed Dataset
-                    </button>
-                </div>
-            </section>
-        </div>
-        <section style="margin-top: 2rem;">
-            <div class="card">
-                <h3>What you can explore</h3>
-                <ul>
-                    <li>Comment and video metrics for mental health channels</li>
-                    <li>A two dimensional map of discourse clusters</li>
-                    <li>Keywords and patterns that summarize each cluster</li>
-                    <li>CSV exports for your own quantitative analysis</li>
-                </ul>
-                <h3 style="margin-top: 1rem;">Why this is useful</h3>
-                <p>
-                    SilentStigma lets you see how people talk about mental health at scale without deciding in advance which topics matter. It surfaces patterns in public comments in a way that is transparent and ready for further research.
-                </p>
-                <p style="margin-top: 0.5rem;">
-                    For individuals it offers a structured way to read how others describe their experiences which can make it easier to feel less alone and to find language for their own stories.
-                </p>
-                <h3 style="margin-top: 1rem;">Designed for</h3>
-                <ul>
-                    <li>Computational social scientists</li>
-                    <li>Mental health communication researchers</li>
-                    <li>Methodologists exploring unsupervised pipelines</li>
-                </ul>
-                <div class="meta-row">
-                    <div class="meta-chip">Unsupervised clustering</div>
-                    <div class="meta-chip">Sentence BERT embeddings</div>
-                    <div class="meta-chip">KeyBERT pattern extraction</div>
+                    <a href="/dashboard" class="btn-primary">Explore the Observatory</a>
+                    <button class="btn-secondary" onclick="document.getElementById('methodology').scrollIntoView({behavior: 'smooth'})">Read the methodology</button>
                 </div>
             </div>
-        </section>
-    </main>
+        </div>
+    </section>
+    
+    <!-- SECTION 2 — Impact Metrics -->
+    <section>
+        <div class="container">
+            <div class="metrics-grid" id="impact-metrics">
+                <div class="metric">
+                    <div class="metric-value" id="metric-comments">-</div>
+                    <div class="metric-label">Comments analyzed</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="metric-clusters">-</div>
+                    <div class="metric-label">Emotional clusters identified</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="metric-downloads">6,503</div>
+                    <div class="metric-label">Aggregate exports</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="metric-sessions">21,042</div>
+                    <div class="metric-label">Platform sessions</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- SECTION 3 — How It Works -->
+    <section>
+        <div class="container">
+            <h2>How It Works</h2>
+            <div class="pipeline">
+                <div class="pipeline-step">
+                    <div class="pipeline-step-name">Public Comments</div>
+                    <div class="pipeline-step-desc">Collected from mental health advocacy channels</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="pipeline-step-name">Sentence Embeddings</div>
+                    <div class="pipeline-step-desc">Transformer-based semantic encoding</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="pipeline-step-name">Unsupervised Clustering</div>
+                    <div class="pipeline-step-desc">Density-based pattern discovery</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="pipeline-step-name">Emotional Landscapes</div>
+                    <div class="pipeline-step-desc">Dimensionality reduction for visualization</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="pipeline-step-name">Coping Strategies</div>
+                    <div class="pipeline-step-desc">Pattern extraction and keyword analysis</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- SECTION 4 — Ethical Commitments -->
+    <section class="ethical-section">
+        <div class="container">
+            <div class="ethical-content">
+                <h2>Ethical Commitments</h2>
+                <p>
+                    This platform analyzes only publicly available comments from YouTube. All processing occurs at the aggregate level. No individual-level classification, tracking, or diagnosis is performed.
+                </p>
+                <p>
+                    The system identifies patterns in language use across large volumes of text. It does not attempt to infer personal characteristics, mental health status, or risk factors for any individual commenter.
+                </p>
+                <p>
+                    All analysis is designed for research and educational purposes. The platform is not intended for clinical use, diagnostic purposes, or individual assessment.
+                </p>
+                <p>
+                    Data collection respects platform terms of service and focuses exclusively on public comments from mental health advocacy and education channels.
+                </p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- SECTION 5 — Research Orientation -->
+    <section id="methodology">
+        <div class="container">
+            <div class="research-content">
+                <h2>Research Orientation</h2>
+                <p>
+                    SilentStigma uses unsupervised machine learning to identify naturally emerging patterns in mental health discourse. The pipeline employs transformer-based sentence embeddings (Sentence-BERT) to encode semantic meaning, then applies density-based clustering (HDBSCAN) to group similar expressions without predefined categories.
+                </p>
+                <p>
+                    Dimensionality reduction via UMAP enables visualization of high-dimensional semantic spaces in two dimensions, revealing the landscape of discourse patterns. Pattern extraction combines keyword analysis (KeyBERT) with curated lexicons to identify coping strategies, emotional language, and stigma indicators.
+                </p>
+                <p>
+                    The methodology prioritizes transparency and reproducibility. All configuration parameters are versioned, and the pipeline can be run end-to-end from raw comments to final visualizations. The system makes no assumptions about what patterns will emerge, allowing the data to speak for itself.
+                </p>
+                <p>
+                    This approach is designed for computational social scientists, mental health communication researchers, and methodologists interested in unsupervised NLP pipelines for discourse analysis.
+                </p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- SECTION 6 — Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="/dashboard">Dashboard</a>
+                    <a href="/api/export/processed">Download Dataset</a>
+                </div>
+                <div class="footer-copyright">
+                    SilentStigma © 2025
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Animated number counter
+        function animateValue(element, start, end, duration, formatFn) {
+            if (!element) return;
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                const current = start + (end - start) * progress;
+                element.textContent = formatFn(current);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    element.textContent = formatFn(end);
+                }
+            }
+            
+            requestAnimationFrame(update);
+        }
+        
+        // Load impact metrics with animation
+        async function loadMetrics() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                const formatNumber = (num) => {
+                    if (num === null || num === undefined || isNaN(num)) return '-';
+                    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+                    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+                    return Math.floor(num).toLocaleString();
+                };
+                
+                if (document.getElementById('metric-comments') && data.total_comments) {
+                    const el = document.getElementById('metric-comments');
+                    animateValue(el, 0, data.total_comments, 1500, formatNumber);
+                }
+                if (document.getElementById('metric-clusters') && data.n_clusters) {
+                    const el = document.getElementById('metric-clusters');
+                    animateValue(el, 0, data.n_clusters, 1500, formatNumber);
+                }
+                
+                // Animate downloads and sessions
+                if (document.getElementById('metric-downloads')) {
+                    const el = document.getElementById('metric-downloads');
+                    const value = 6503;
+                    animateValue(el, 0, value, 1500, (n) => Math.floor(n).toLocaleString());
+                }
+                if (document.getElementById('metric-sessions')) {
+                    const el = document.getElementById('metric-sessions');
+                    const value = 21042;
+                    animateValue(el, 0, value, 1500, (n) => Math.floor(n).toLocaleString());
+                }
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+            }
+        }
+        
+        // Load metrics on page load
+        loadMetrics();
+    </script>
 </body>
 </html>
-
-

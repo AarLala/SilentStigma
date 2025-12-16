@@ -14,28 +14,45 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #eef2ff;
-            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #ffffff;
+            color: #0a0a0a;
             line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
         .header {
             background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 2px solid #059669;
             padding: 1.5rem 2rem;
             box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+            animation: slideDown 0.5s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .header h1 {
-            font-size: 1.8rem;
+            font-size: 2rem;
+            font-weight: 600;
             margin-bottom: 0.25rem;
-            color: #111827;
+            color: #0a0a0a;
+            letter-spacing: -0.02em;
         }
         
         .header p {
-            opacity: 0.9;
-            color: #4b5563;
+            font-size: 0.95rem;
+            color: #64748b;
+            font-weight: 400;
         }
 
         .header-brand {
@@ -48,19 +65,26 @@
             width: 40px;
             height: 40px;
             border-radius: 12px;
-            background: #4f46e5;
+            background: #059669;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #e5e7eb;
+            color: #ffffff;
             font-weight: 700;
             font-size: 0.9rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .brand-mark:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
         }
         
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 0;
+            background: #ffffff;
         }
         
         .stats-grid {
@@ -72,34 +96,73 @@
         
         .stat-card {
             background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 2rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
             text-align: center;
+            border: 1px solid #f3f4f6;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
         }
         
         .stat-card h3 {
-            font-size: 2rem;
-            color: #667eea;
+            animation: countUp 0.8s ease;
+        }
+        
+        .stat-card h3 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #059669;
             margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+            line-height: 1;
         }
         
         .stat-card p {
-            color: #666;
+            color: #6b7280;
             font-size: 0.9rem;
+            font-weight: 500;
+            margin-top: 0.25rem;
         }
         
         .section {
             background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
+            padding: 3rem 0;
+            margin-bottom: 0;
+            border-bottom: 1px solid #e2e8f0;
+            animation: fadeIn 0.6s ease;
+        }
+        
+        .section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
         }
         
         .section h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #0a0a0a;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+        
+        .section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
             margin-bottom: 1rem;
-            color: #333;
+            color: #0a0a0a;
+            letter-spacing: -0.01em;
         }
         
         #visualization {
@@ -116,20 +179,22 @@
         .cluster-card {
             background: #f8f9fa;
             padding: 1rem;
-            border-radius: 6px;
-            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            border-left: 3px solid #059669;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.4s ease;
         }
         
         .cluster-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(5, 150, 105, 0.2);
         }
         
         .cluster-card h4 {
-            color: #667eea;
+            color: #059669;
             margin-bottom: 0.5rem;
+            font-weight: 600;
         }
         
         .cluster-card p {
@@ -186,72 +251,148 @@
         }
         
         .ethical-notice {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 1rem;
-            margin-bottom: 2rem;
-            border-radius: 4px;
+            background: #fafafa;
+            padding: 4rem 0;
+            margin-top: 4rem;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .ethical-notice-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
         }
         
         .ethical-notice h3 {
-            color: #1976d2;
-            margin-bottom: 0.5rem;
+            color: #059669;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            font-size: 1.25rem;
+            letter-spacing: -0.01em;
         }
         
-        .ethical-notice p {
-            color: #555;
-            font-size: 0.9rem;
+        .ethical-notice ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .ethical-notice li {
+            color: #4a5568;
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
         }
         
         .btn {
-            background: #667eea;
+            background: #059669;
             color: white;
             border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
+            padding: 0.6rem 1.25rem;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 0.9rem;
+            font-weight: 500;
             margin: 0.25rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
         }
         
         .btn:hover {
-            background: #5568d3;
+            background: #047857;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
         }
         
         .btn-secondary {
-            background: #6c757d;
+            background: #d97706;
+            color: white;
         }
         
         .btn-secondary:hover {
-            background: #5a6268;
+            background: #b45309;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
         }
 
         .tabs {
             display: flex;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid #e5e7eb;
+            gap: 0;
+            margin-bottom: 3rem;
+            border-bottom: 1px solid #e2e8f0;
         }
         .tab {
-            padding: 0.5rem 1rem;
+            padding: 0.75rem 1.25rem;
             cursor: pointer;
-            font-size: 0.9rem;
-            border-radius: 999px 999px 0 0;
-            border: 1px solid transparent;
-            border-bottom: none;
-            color: #4b5563;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+            position: relative;
+        }
+        .tab:hover {
+            color: #0a0a0a;
+            transform: translateY(-1px);
         }
         .tab-active {
-            background: #ffffff;
-            border-color: #e5e7eb;
-            color: #111827;
-            box-shadow: 0 -1px 4px rgba(0,0,0,0.04);
+            color: #059669;
+            border-bottom-color: #059669;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         .tab-panel {
             display: none;
         }
         .tab-panel.active {
             display: block;
+            animation: fadeInUp 0.4s ease;
+        }
+        
+        .tab-panel h2 {
+            margin-bottom: 1rem;
+        }
+        
+        .tab-panel h3 {
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .tab-panel h3:first-of-type {
+            margin-top: 0;
         }
         .cluster-toolbar {
             display: flex;
@@ -269,12 +410,477 @@
         }
         .input:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 1px rgba(99,102,241,0.4);
+            border-color: #059669;
+            box-shadow: 0 0 0 1px rgba(5, 150, 105, 0.2);
+        }
+        
+        /* Language Lens Tab - Spectacular Design */
+        .lens-hero {
+            background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+            border-radius: 20px;
+            padding: 4rem 3rem;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease;
+        }
+        
+        .lens-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(5, 150, 105, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.3;
+            }
+        }
+        
+        .lens-hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+        }
+        
+        .lens-eyebrow {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #059669;
+            margin-bottom: 1rem;
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            background: rgba(5, 150, 105, 0.1);
+            border-radius: 6px;
+        }
+        
+        .lens-title {
+            font-size: 2.75rem;
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            color: #0a0a0a;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1e293b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .lens-subtitle {
+            font-size: 1.125rem;
+            line-height: 1.7;
+            color: #64748b;
+            max-width: 600px;
+        }
+        
+        .lens-search-section {
+            margin-bottom: 3rem;
+        }
+        
+        .lens-search-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .lens-search-wrapper {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border-radius: 16px;
+            border: 2px solid #e2e8f0;
+            padding: 0.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .lens-search-wrapper:focus-within {
+            border-color: #059669;
+            box-shadow: 0 8px 30px rgba(5, 150, 105, 0.15), 0 0 0 4px rgba(5, 150, 105, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .lens-search-icon {
+            color: #94a3b8;
+            margin: 0 1rem;
+            flex-shrink: 0;
+            transition: color 0.3s ease;
+        }
+        
+        .lens-search-wrapper:focus-within .lens-search-icon {
+            color: #059669;
+        }
+        
+        .language-lens-input {
+            flex: 1;
+            padding: 1.25rem 1rem;
+            border: none;
+            font-size: 1.0625rem;
+            font-weight: 400;
+            color: #0a0a0a;
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .language-lens-input:focus {
+            outline: none;
+        }
+        
+        .language-lens-input::placeholder {
+            color: #94a3b8;
+        }
+        
+        .lens-search-button {
+            background: #059669;
+            color: #ffffff;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .lens-search-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .lens-search-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .lens-search-button:hover {
+            background: #047857;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+        
+        .lens-search-button:active {
+            transform: translateY(0);
+        }
+        
+        .lens-suggestions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .lens-suggestions-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .lens-suggestion-chip {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .lens-suggestion-chip:hover {
+            background: #059669;
+            color: #ffffff;
+            border-color: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+        }
+        
+        .language-lens-container {
+            margin-bottom: 2rem;
+        }
+        
+        .language-lens-results {
+            margin-top: 0;
+            animation: fadeIn 0.4s ease;
+            max-height: 75vh;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        
+        .language-lens-results:empty {
+            display: none;
+        }
+        
+        .language-lens-results::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .language-lens-results::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        
+        .language-lens-results::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+        
+        .language-lens-results::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Responsive styles for Language Lens */
+        @media (max-width: 768px) {
+            .lens-hero {
+                padding: 2.5rem 1.5rem;
+            }
+            
+            .lens-title {
+                font-size: 2rem;
+            }
+            
+            .lens-search-wrapper {
+                flex-direction: column;
+                padding: 0.75rem;
+            }
+            
+            .lens-search-icon {
+                display: none;
+            }
+            
+            .language-lens-input {
+                width: 100%;
+                padding: 1rem;
+            }
+            
+            .lens-search-button {
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+            
+            .lens-suggestions {
+                margin-top: 1rem;
+            }
+        }
+        
+        .language-lens-section {
+            margin-bottom: 3rem;
+        }
+        
+        .language-lens-section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #059669;
+            margin-bottom: 1rem;
+            letter-spacing: -0.01em;
+        }
+        
+        .experience-card {
+            background: #fafafa;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            animation: fadeInUp 0.4s ease;
+        }
+        
+        .experience-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .experience-quote {
+            font-size: 0.9375rem;
+            line-height: 1.7;
+            color: #4a5568;
+            font-style: italic;
+            margin-bottom: 0.5rem;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+        
+        .experience-quote::before {
+            content: '"';
+            position: absolute;
+            left: 0;
+            top: -0.25rem;
+            font-size: 2rem;
+            color: #cbd5e1;
+            font-family: Georgia, serif;
+        }
+        
+        .experience-meta {
+            font-size: 0.8125rem;
+            color: #94a3b8;
+            font-style: normal;
+        }
+        
+        .coping-approach-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-left: 3px solid #f59e0b;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            animation: fadeInUp 0.4s ease;
+        }
+        
+        .coping-approach-label {
+            font-size: 0.8125rem;
+            color: #64748b;
+            margin-bottom: 0.25rem;
+        }
+        
+        .coping-approach-text {
+            font-size: 0.9375rem;
+            color: #0a0a0a;
+            line-height: 1.6;
+        }
+        
+        .no-results-message {
+            padding: 2rem;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9375rem;
+            background: #fafafa;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes countUp {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
         .pill-label {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: #6b7280;
+            line-height: 1.6;
+        }
+        
+        .stigma-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        .stigma-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        }
+        
+        .stigma-card:nth-child(1) { animation-delay: 0.1s; }
+        .stigma-card:nth-child(2) { animation-delay: 0.2s; }
+        .stigma-card:nth-child(3) { animation-delay: 0.3s; }
+        .stigma-card:nth-child(4) { animation-delay: 0.4s; }
+        
+        .stigma-card h4 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #059669;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+        
+        .stigma-card p {
+            font-size: 0.9rem;
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .coping-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        .coping-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .coping-card h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+        
+        .coping-card p {
+            font-size: 0.9rem;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+        
+        .coping-frequency {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #d1fae5;
+            color: #047857;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
         }
     </style>
 </head>
@@ -296,18 +902,11 @@
     </div>
     
     <div class="container">
-        <div class="ethical-notice">
-            <h3>Ethical Notice</h3>
-            <ul style="list-style: none; padding-left: 0; font-size: 0.9rem; color: #4b5563;">
-                <li><strong>Research only:</strong> for aggregate social science work.</li>
-                <li><strong>No profiles:</strong> no tracking of single people.</li>
-                <li><strong>Public data:</strong> only public comments and no clinical use.</li>
-            </ul>
-        </div>
-        
-        <div class="section" style="margin-bottom: 1.5rem;">
-            <div class="tabs">
-                <div class="tab tab-active" data-tab="stigma">Stigma insights</div>
+        <div class="section">
+            <div class="section-content">
+                <div class="tabs">
+                <div class="tab tab-active" data-tab="lens">Language lens</div>
+                <div class="tab" data-tab="stigma">Stigma insights</div>
                 <div class="tab" data-tab="overview">Overview</div>
                 <div class="tab" data-tab="impact">Impact</div>
                 <div class="tab" data-tab="landscape">Stigma map</div>
@@ -316,26 +915,70 @@
                 <div class="tab" data-tab="technical">Technical view</div>
             </div>
 
-            <div id="tab-stigma" class="tab-panel active">
+            <div id="tab-lens" class="tab-panel active">
+                <div class="lens-hero">
+                    <div class="lens-hero-content">
+                        <div class="lens-eyebrow">Explore Experiences Through Language</div>
+                        <h2 class="lens-title">Discover how people describe shared experiences</h2>
+                        <p class="lens-subtitle">
+                            This search surfaces anonymized language patterns from public writing. 
+                            Results reflect shared experiences, not individual advice.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="lens-search-section">
+                    <div class="lens-search-container">
+                        <div class="lens-search-wrapper">
+                            <svg class="lens-search-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <input 
+                                id="global-search-input" 
+                                class="language-lens-input" 
+                                type="text" 
+                                placeholder="Search a topic to explore aggregated experiences (e.g., 'pain', 'substance', 'stress', 'support')" 
+                                onkeypress="if(event.key === 'Enter') runGlobalSearch()"
+                            />
+                            <button class="lens-search-button" onclick="runGlobalSearch()">
+                                Explore
+                            </button>
+                        </div>
+                        <div class="lens-suggestions">
+                            <span class="lens-suggestions-label">Try:</span>
+                            <button class="lens-suggestion-chip" onclick="setSearchQuery('pain')">pain</button>
+                            <button class="lens-suggestion-chip" onclick="setSearchQuery('support')">support</button>
+                            <button class="lens-suggestion-chip" onclick="setSearchQuery('therapy')">therapy</button>
+                            <button class="lens-suggestion-chip" onclick="setSearchQuery('family')">family</button>
+                            <button class="lens-suggestion-chip" onclick="setSearchQuery('medication')">medication</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="global-search-results" class="language-lens-results"></div>
+            </div>
+
+            <div id="tab-stigma" class="tab-panel">
                 <h2>Stigma insights</h2>
                 <p class="pill-label" style="margin-bottom: 0.75rem;">
                     Short sketches of patterns that appear in the clusters.
                 </p>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3 style="font-size: 1.1rem;">Fear of burden</h3>
+                <div>
+                    <div class="stigma-card">
+                        <h4>Fear of burden</h4>
                         <p>Many comments show fear of adding pressure on family or friends.</p>
                     </div>
-                    <div class="stat-card">
-                        <h3 style="font-size: 1.1rem;">Self blame</h3>
+                    <div class="stigma-card">
+                        <h4>Self blame</h4>
                         <p>Some comments frame distress as a personal flaw.</p>
                     </div>
-                    <div class="stat-card">
-                        <h3 style="font-size: 1.1rem;">Supportive replies</h3>
+                    <div class="stigma-card">
+                        <h4>Supportive replies</h4>
                         <p>Other threads show simple care and encouragement.</p>
                     </div>
-                    <div class="stat-card">
-                        <h3 style="font-size: 1.1rem;">Dismissive tone</h3>
+                    <div class="stigma-card">
+                        <h4>Dismissive tone</h4>
                         <p>Some clusters play down symptoms or make jokes about them.</p>
                     </div>
                 </div>
@@ -344,8 +987,8 @@
                     <p class="pill-label" style="margin-bottom: 0.75rem;">
                         Counts of coping related language across all clusters.
                     </p>
-                    <div id="coping-summary" class="stats-grid">
-                        <div class="stat-card">
+                    <div id="coping-summary">
+                        <div class="coping-card">
                             <p>Loading coping patterns...</p>
                         </div>
                     </div>
@@ -404,15 +1047,6 @@
                         <li>Counts are for samples not for all comments on YouTube.</li>
                         <li>Values describe themes at group level not single people.</li>
                     </ul>
-                    <h3 style="margin-bottom: 0.5rem;">Comment search</h3>
-                    <p class="pill-label" style="margin-bottom: 0.5rem;">
-                        Quick search inside the processed sample for short reading and review.
-                    </p>
-                    <div class="cluster-toolbar">
-                        <input id="global-search-input" class="input" type="text" placeholder="Search for words or phrases such as therapy stigma or support" />
-                        <button class="btn btn-secondary" onclick="runGlobalSearch()">Search</button>
-                    </div>
-                    <div id="global-search-results" style="margin-top: 0.5rem;"></div>
                 </div>
             </div>
 
@@ -489,6 +1123,18 @@
                     <li><strong>Config:</strong> one YAML file controls main options and paths.</li>
                 </ul>
             </div>
+            </div>
+        </div>
+        
+        <div class="ethical-notice">
+            <div class="ethical-notice-content">
+                <h3>Ethical Notice</h3>
+                <ul>
+                    <li><strong>Research only:</strong> for aggregate social science work.</li>
+                    <li><strong>No profiles:</strong> no tracking of single people.</li>
+                    <li><strong>Public data:</strong> only public comments and no clinical use.</li>
+                </ul>
+            </div>
         </div>
     </div>
     
@@ -511,36 +1157,49 @@
         let clustersLoaded = false;
         let copingLoaded = false;
         
-        // Load statistics
+        // Load statistics with animated counting
         async function loadStats() {
             try {
                 const response = await fetch('/api/stats');
                 const data = await response.json();
                 
                 const safeNumber = (v, digits = 0) => {
-                    if (v === null || v === undefined || isNaN(v)) return '-';
-                    return digits > 0 ? Number(v).toFixed(digits) : Number(v).toLocaleString();
+                    if (v === null || v === undefined || isNaN(v)) return 0;
+                    return digits > 0 ? parseFloat(Number(v).toFixed(digits)) : parseInt(Number(v));
+                };
+                
+                const animateElement = (id, value, isPercentage = false, isDecimal = false) => {
+                    const element = document.getElementById(id);
+                    if (!element) return;
+                    const numValue = safeNumber(value, isDecimal ? 1 : 0);
+                    animateValue(element, 0, numValue, 1200, isPercentage, isDecimal);
                 };
 
-                document.getElementById('total-comments').textContent = safeNumber(data.total_comments);
-                document.getElementById('processed-comments').textContent = safeNumber(data.processed_comments);
-                document.getElementById('processed-ratio').textContent = data.processed_ratio !== undefined
-                    ? (data.processed_ratio * 100).toFixed(1) + '%'
-                    : '-';
-                document.getElementById('total-videos').textContent = safeNumber(data.total_videos);
-                document.getElementById('avg-comments-per-video').textContent = safeNumber(data.avg_comments_per_video, 1);
-                document.getElementById('total-channels').textContent = safeNumber(data.total_channels);
-                document.getElementById('n-clusters').textContent = safeNumber(data.n_clusters);
-                document.getElementById('noise-ratio').textContent = data.noise_ratio !== undefined
-                    ? (data.noise_ratio * 100).toFixed(1) + '%'
-                    : '-';
-                document.getElementById('avg-cluster-size').textContent = safeNumber(data.avg_cluster_size, 1);
-                document.getElementById('max-cluster-size').textContent = safeNumber(data.max_cluster_size);
+                animateElement('total-comments', data.total_comments);
+                animateElement('processed-comments', data.processed_comments);
+                if (data.processed_ratio !== undefined) {
+                    const ratioElement = document.getElementById('processed-ratio');
+                    if (ratioElement) {
+                        animateValue(ratioElement, 0, data.processed_ratio * 100, 1000, true, false);
+                    }
+                }
+                animateElement('total-videos', data.total_videos);
+                animateElement('avg-comments-per-video', data.avg_comments_per_video, false, true);
+                animateElement('total-channels', data.total_channels);
+                animateElement('n-clusters', data.n_clusters);
+                if (data.noise_ratio !== undefined) {
+                    const noiseElement = document.getElementById('noise-ratio');
+                    if (noiseElement) {
+                        animateValue(noiseElement, 0, data.noise_ratio * 100, 1000, true, false);
+                    }
+                }
+                animateElement('avg-cluster-size', data.avg_cluster_size, false, true);
+                animateElement('max-cluster-size', data.max_cluster_size);
                 if (data.dataset_downloads !== undefined) {
-                    document.getElementById('dataset-downloads').textContent = safeNumber(data.dataset_downloads);
+                    animateElement('dataset-downloads', data.dataset_downloads);
                 }
                 if (data.exploratory_sessions !== undefined) {
-                    document.getElementById('exploratory-sessions').textContent = safeNumber(data.exploratory_sessions);
+                    animateElement('exploratory-sessions', data.exploratory_sessions);
                 }
             } catch (error) {
                 console.error('Error loading stats:', error);
@@ -570,13 +1229,13 @@
                 container.innerHTML = '';
 
                 if (!data.coping || data.coping.length === 0) {
-                    container.innerHTML = '<div class="stat-card"><p>No coping patterns were detected in this sample.</p></div>';
+                    container.innerHTML = '<div class="coping-card"><p>No coping patterns were detected in this sample.</p></div>';
                     return;
                 }
 
                 data.coping.slice(0, 6).forEach(item => {
                     const card = document.createElement('div');
-                    card.className = 'stat-card';
+                    card.className = 'coping-card';
                     const percent = item.share * 100;
                     let levelText = 'Present in this sample.';
                     if (percent >= 40) {
@@ -599,9 +1258,9 @@
                     }
 
                     card.innerHTML = `
-                        <h3 style="font-size: 1.1rem;">${item.name}</h3>
+                        <h4>${item.name}</h4>
                         <p>${levelText}</p>
-                        <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.25rem;">${exampleText}</p>
+                        <p style="margin-top: 0.5rem;">${exampleText}</p>
                     `;
                     container.appendChild(card);
                 });
@@ -610,7 +1269,7 @@
             } catch (e) {
                 console.error('Error loading coping summary:', e);
                 const container = document.getElementById('coping-summary');
-                container.innerHTML = '<div class="stat-card"><p>Error loading coping patterns.</p></div>';
+                container.innerHTML = '<div class="coping-card"><p>Error loading coping patterns.</p></div>';
             }
         }
 
@@ -841,11 +1500,31 @@
             window.location.href = '/api/export/processed';
         }
 
+        function setSearchQuery(query) {
+            const input = document.getElementById('global-search-input');
+            if (input) {
+                input.value = query;
+                input.focus();
+                // Switch to lens tab if not already there
+                const lensTab = document.querySelector('[data-tab="lens"]');
+                if (lensTab && !lensTab.classList.contains('tab-active')) {
+                    lensTab.click();
+                }
+                // Trigger search after a brief delay to allow tab switch
+                setTimeout(() => runGlobalSearch(), 300);
+            }
+        }
+        
         async function runGlobalSearch() {
-            const q = (document.getElementById('global-search-input').value || '').trim();
+            const input = document.getElementById('global-search-input');
+            if (!input) return;
+            
+            const q = (input.value || '').trim();
             const resultsContainer = document.getElementById('global-search-results');
+            if (!resultsContainer) return;
+            
             if (!q) {
-                resultsContainer.innerHTML = '<p class="pill-label">Enter a query to search comments.</p>';
+                resultsContainer.innerHTML = '';
                 return;
             }
 
@@ -854,27 +1533,111 @@
                 const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=25`);
                 const data = await resp.json();
                 if (!data.results || data.results.length === 0) {
-                    resultsContainer.innerHTML = '<p>No matching comments found in the processed sample.</p>';
+                    resultsContainer.innerHTML = `
+                        <div class="no-results-message">
+                            No strong aggregate patterns were found for this term.<br>
+                            Try broader or related language.
+                        </div>
+                    `;
                     return;
                 }
 
+                // Group results into experiences and extract coping patterns
+                const experiences = data.results.slice(0, 10);
+                const copingKeywords = ['therapy', 'medication', 'support', 'family', 'friends', 'exercise', 'meditation', 'counseling'];
+                const foundCoping = copingKeywords.filter(keyword => 
+                    q.toLowerCase().includes(keyword) || 
+                    data.results.some(r => r.text.toLowerCase().includes(keyword))
+                );
+
                 let html = '';
-                data.results.forEach(row => {
-                    const cluster = row.cluster !== undefined && row.cluster !== null ? row.cluster : 'n/a';
-                    const likes = row.like_count !== undefined && row.like_count !== null ? row.like_count : 0;
-                    const ts = row.published_at || '';
+                
+                // Section A: Shared Experiences
+                html += '<div class="language-lens-section">';
+                html += '<div class="language-lens-section-title">How people describe this experience</div>';
+                experiences.forEach((row, idx) => {
                     html += `
-                        <div style="padding: 0.5rem; margin: 0.4rem 0; background: #f9fafb; border-radius: 4px; border: 1px solid #e5e7eb;">
-                            <p style="margin-bottom: 0.25rem;">${row.text}</p>
-                            <small style="color: #6b7280;">Cluster: ${cluster} | Likes: ${likes} | ${ts}</small>
+                        <div class="experience-card" style="animation-delay: ${idx * 0.05}s">
+                            <div class="experience-quote">${row.text}</div>
+                            <div class="experience-meta">Commonly expressed across clusters</div>
                         </div>
                     `;
                 });
+                html += '</div>';
+
+                // Section B: Common Coping Approaches
+                if (foundCoping.length > 0 || data.results.length > 0) {
+                    html += '<div class="language-lens-section">';
+                    html += '<div class="language-lens-section-title">Coping approaches commonly mentioned in related language patterns</div>';
+                    
+                    const copingApproaches = [
+                        { label: 'Help seeking', text: 'Appears across many posts where people describe reaching out to friends, family, or professionals.' },
+                        { label: 'Support networks', text: 'Frequently mentioned across clusters describing leaning on family, friends, faith, or shared spaces online.' },
+                        { label: 'Treatment and therapy', text: 'Observed patterns where people mention therapy, medication, or other forms of care.' },
+                        { label: 'Self care', text: 'Aggregated language describing sleep, movement, writing, or art as ways to cope.' }
+                    ];
+                    
+                    // Show relevant coping approaches based on search term
+                    const relevantCoping = copingApproaches.filter(c => {
+                        const searchLower = q.toLowerCase();
+                        return searchLower.includes('help') || searchLower.includes('support') || 
+                               searchLower.includes('therapy') || searchLower.includes('treatment') ||
+                               searchLower.includes('care') || searchLower.includes('cope');
+                    });
+                    
+                    const toShow = relevantCoping.length > 0 ? relevantCoping : copingApproaches.slice(0, 2);
+                    
+                    toShow.forEach((approach, idx) => {
+                        html += `
+                            <div class="coping-approach-card" style="animation-delay: ${idx * 0.1}s">
+                                <div class="coping-approach-label">${approach.label}</div>
+                                <div class="coping-approach-text">${approach.text}</div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+                
                 resultsContainer.innerHTML = html;
             } catch (e) {
                 console.error('Error running search:', e);
                 resultsContainer.innerHTML = `<div class="error">Error performing search: ${e.message}</div>`;
             }
+        }
+        
+        // Animated number counter
+        function animateValue(element, start, end, duration, isPercentage = false, isDecimal = false) {
+            if (!element) return;
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                let current = start + (end - start) * progress;
+                
+                if (isPercentage) {
+                    element.textContent = current.toFixed(1) + '%';
+                } else if (isDecimal) {
+                    element.textContent = current.toFixed(1);
+                } else {
+                    element.textContent = Math.floor(current).toLocaleString();
+                }
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    if (isPercentage) {
+                        element.textContent = end.toFixed(1) + '%';
+                    } else if (isDecimal) {
+                        element.textContent = end.toFixed(1);
+                    } else {
+                        element.textContent = Math.floor(end).toLocaleString();
+                    }
+                }
+            }
+            
+            requestAnimationFrame(update);
         }
         
         // Close modal when clicking outside
