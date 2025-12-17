@@ -544,6 +544,37 @@
             color: #94a3b8;
         }
         
+        .search-progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #e2e8f0;
+            border-radius: 0 0 16px 16px;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .search-progress-bar.active {
+            opacity: 1;
+        }
+        
+        .search-progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #059669, #10b981);
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: progress-shimmer 1.5s infinite;
+        }
+        
+        @keyframes progress-shimmer {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
         .lens-search-button {
             background: #059669;
             color: #ffffff;
@@ -963,6 +994,9 @@
                             <button class="lens-search-button" onclick="runGlobalSearch()">
                                 Explore
                             </button>
+                            <div class="search-progress-bar" id="search-progress-bar">
+                                <div class="search-progress-bar-fill" id="search-progress-fill"></div>
+                            </div>
                         </div>
                         <div class="lens-suggestions">
                             <span class="lens-suggestions-label">Try:</span>
@@ -1592,11 +1626,21 @@
             
             const q = (input.value || '').trim();
             const resultsContainer = document.getElementById('global-search-results');
+            const progressBar = document.getElementById('search-progress-bar');
+            const progressFill = document.getElementById('search-progress-fill');
             if (!resultsContainer) return;
             
             if (!q) {
                 resultsContainer.innerHTML = '';
+                if (progressBar) progressBar.classList.remove('active');
+                if (progressFill) progressFill.style.width = '0%';
                 return;
+            }
+
+            // Show progress bar
+            if (progressBar) progressBar.classList.add('active');
+            if (progressFill) {
+                progressFill.style.width = '30%';
             }
 
             // Track the search (backend also tracks, but this ensures UI updates immediately)
@@ -1608,17 +1652,40 @@
                 console.warn('Error tracking search:', e);
             }
 
+            if (progressFill) progressFill.style.width = '50%';
             resultsContainer.innerHTML = '<div class="loading">Searching...</div>';
+
             try {
                 const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=25`);
+                
+                if (progressFill) progressFill.style.width = '80%';
+                
+                if (!resp.ok) {
+                    const errorData = await resp.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Search failed with status ${resp.status}`);
+                }
+                
                 const data = await resp.json();
+                
+                if (progressFill) progressFill.style.width = '100%';
+                
+                // Check for error in response
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
                 if (!data.results || data.results.length === 0) {
                     resultsContainer.innerHTML = `
                         <div class="no-results-message">
-                            No strong aggregate patterns were found for this term.<br>
-                            Try broader or related language.
+                            <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #334155;">No patterns found</div>
+                            <div style="color: #64748b;">No strong aggregate patterns were found for "${q}".<br>
+                            Try broader or related language, or explore the suggestions above.</div>
                         </div>
                     `;
+                    setTimeout(() => {
+                        if (progressBar) progressBar.classList.remove('active');
+                        if (progressFill) progressFill.style.width = '0%';
+                    }, 300);
                     return;
                 }
 
@@ -1679,9 +1746,46 @@
                 }
                 
                 resultsContainer.innerHTML = html;
+                
+                // Hide progress bar after a brief delay
+                setTimeout(() => {
+                    if (progressBar) progressBar.classList.remove('active');
+                    setTimeout(() => {
+                        if (progressFill) progressFill.style.width = '0%';
+                    }, 300);
+                }, 200);
+                
             } catch (e) {
                 console.error('Error running search:', e);
-                resultsContainer.innerHTML = `<div class="error">Error performing search: ${e.message}</div>`;
+                
+                // Hide progress bar
+                if (progressBar) progressBar.classList.remove('active');
+                if (progressFill) progressFill.style.width = '0%';
+                
+                // Show user-friendly error message
+                let errorMessage = 'Unable to complete search at this time.';
+                let suggestion = 'Please try again or use one of the suggested terms above.';
+                
+                if (e.message) {
+                    const msg = e.message.toLowerCase();
+                    if (msg.includes('pattern') || msg.includes('regex') || msg.includes('string')) {
+                        errorMessage = 'Search query contains special characters that cannot be processed.';
+                        suggestion = 'Try using simpler words without special characters (e.g., "pain" instead of "pain!").';
+                    } else if (msg.includes('network') || msg.includes('fetch')) {
+                        errorMessage = 'Connection issue detected.';
+                        suggestion = 'Please check your internet connection and try again.';
+                    } else if (msg.includes('not found') || msg.includes('404')) {
+                        errorMessage = 'Search service is temporarily unavailable.';
+                        suggestion = 'Please try again in a moment.';
+                    }
+                }
+                
+                resultsContainer.innerHTML = `
+                    <div class="no-results-message">
+                        <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #dc2626;">${errorMessage}</div>
+                        <div style="color: #64748b;">${suggestion}</div>
+                    </div>
+                `;
             }
         }
         

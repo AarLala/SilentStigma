@@ -7,6 +7,7 @@ import logging
 import sqlite3
 import os
 import hashlib
+import re
 from pathlib import Path
 from datetime import datetime, timedelta
 from flask import Flask, render_template, jsonify, send_file, request
@@ -756,7 +757,9 @@ def search_comments():
         if "text" not in df.columns:
             return jsonify({"error": "No text column in processed data"}), 500
 
-        mask = df["text"].astype(str).str.contains(query, case=False, na=False)
+        # Escape regex special characters to treat query as literal string
+        escaped_query = re.escape(query)
+        mask = df["text"].astype(str).str.contains(escaped_query, case=False, na=False, regex=True)
         df = df[mask]
 
         cluster_path = output_dir / "cluster_results.csv"

@@ -567,37 +567,37 @@
                     return Math.floor(num).toLocaleString();
                 };
                 
-                // Load comments and clusters from stats
+                // Load comments and clusters from stats (faster animation: 800ms instead of 1500ms)
                 if (document.getElementById('metric-comments') && statsData.total_comments) {
                     const el = document.getElementById('metric-comments');
-                    animateValue(el, 0, statsData.total_comments, 1500, formatNumber);
+                    animateValue(el, 0, statsData.total_comments, 800, formatNumber);
                 }
                 if (document.getElementById('metric-clusters') && statsData.n_clusters) {
                     const el = document.getElementById('metric-clusters');
-                    animateValue(el, 0, statsData.n_clusters, 1500, formatNumber);
+                    animateValue(el, 0, statsData.n_clusters, 800, formatNumber);
                 }
                 
-                // Load downloads and sessions from Supabase metrics
+                // Load downloads and sessions from Supabase metrics (faster animation: 800ms instead of 1500ms)
                 if (document.getElementById('metric-downloads')) {
                     const el = document.getElementById('metric-downloads');
                     const value = metricsData.downloads || 6503;
-                    animateValue(el, 0, value, 1500, (n) => Math.floor(n).toLocaleString());
+                    animateValue(el, 0, value, 800, (n) => Math.floor(n).toLocaleString());
                 }
                 if (document.getElementById('metric-sessions')) {
                     const el = document.getElementById('metric-sessions');
                     const value = metricsData.exploratory_sessions || 21042;
-                    animateValue(el, 0, value, 1500, (n) => Math.floor(n).toLocaleString());
+                    animateValue(el, 0, value, 800, (n) => Math.floor(n).toLocaleString());
                 }
             } catch (error) {
                 console.error('Error loading metrics:', error);
-                // Fallback to default values if API fails
+                // Fallback to default values if API fails (faster animation: 800ms)
                 if (document.getElementById('metric-downloads')) {
                     const el = document.getElementById('metric-downloads');
-                    animateValue(el, 0, 6503, 1500, (n) => Math.floor(n).toLocaleString());
+                    animateValue(el, 0, 6503, 800, (n) => Math.floor(n).toLocaleString());
                 }
                 if (document.getElementById('metric-sessions')) {
                     const el = document.getElementById('metric-sessions');
-                    animateValue(el, 0, 21042, 1500, (n) => Math.floor(n).toLocaleString());
+                    animateValue(el, 0, 21042, 800, (n) => Math.floor(n).toLocaleString());
                 }
             }
         }
