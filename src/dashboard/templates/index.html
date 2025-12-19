@@ -1571,22 +1571,25 @@
                 const resp = await fetch('/api/metrics');
                 const data = await resp.json();
                 
-                // Update search count
+                // Update search count (instant display)
                 const countEl = document.getElementById('search-count-text');
                 if (countEl && data.searches) {
                     const current = parseInt(countEl.textContent.replace(/,/g, '')) || 0;
                     if (data.searches !== current) {
-                        animateValue(countEl, current, data.searches, 500, false, false);
+                        // Show immediately, then animate briefly
+                        countEl.textContent = data.searches.toLocaleString();
+                        animateValue(countEl, data.searches * 0.95, data.searches, 100, (n) => Math.floor(n).toLocaleString());
                     }
                 }
                 
-                // Update download and session counts if needed
+                // Update download and session counts (instant display)
                 if (data.downloads !== undefined) {
                     const downloadEl = document.getElementById('dataset-downloads');
                     if (downloadEl) {
                         const current = parseInt(downloadEl.textContent.replace(/,/g, '')) || 0;
                         if (data.downloads !== current) {
-                            animateValue(downloadEl, current, data.downloads, 500, false, false);
+                            downloadEl.textContent = data.downloads.toLocaleString();
+                            animateValue(downloadEl, data.downloads * 0.95, data.downloads, 100, (n) => Math.floor(n).toLocaleString());
                         }
                     }
                 }
@@ -1596,7 +1599,8 @@
                     if (sessionEl) {
                         const current = parseInt(sessionEl.textContent.replace(/,/g, '')) || 0;
                         if (data.exploratory_sessions !== current) {
-                            animateValue(sessionEl, current, data.exploratory_sessions, 500, false, false);
+                            sessionEl.textContent = data.exploratory_sessions.toLocaleString();
+                            animateValue(sessionEl, data.exploratory_sessions * 0.95, data.exploratory_sessions, 100, (n) => Math.floor(n).toLocaleString());
                         }
                     }
                 }
@@ -1605,6 +1609,35 @@
             }
         }
 
+        // Cache for pre-loaded search results
+        const preloadedSearchCache = {};
+        
+        // Pre-load common search queries on page load
+        async function preloadCommonSearches() {
+            const commonQueries = ['pain', 'support', 'therapy', 'family', 'medication'];
+            try {
+                // Pre-load on backend
+                await fetch('/api/search/preload').catch(() => {});
+                
+                // Pre-load on frontend for instant display
+                for (const query of commonQueries) {
+                    try {
+                        const resp = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=25`);
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            if (data.results) {
+                                preloadedSearchCache[query.toLowerCase()] = data.results;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn(`Error preloading query "${query}":`, e);
+                    }
+                }
+            } catch (e) {
+                console.warn('Error preloading common searches:', e);
+            }
+        }
+        
         function setSearchQuery(query) {
             const input = document.getElementById('global-search-input');
             if (input) {
@@ -1615,9 +1648,93 @@
                 if (lensTab && !lensTab.classList.contains('tab-active')) {
                     lensTab.click();
                 }
-                // Trigger search after a brief delay to allow tab switch
-                setTimeout(() => runGlobalSearch(), 300);
+                
+                // Check if we have pre-loaded results for instant display
+                const cachedResults = preloadedSearchCache[query.toLowerCase()];
+                if (cachedResults) {
+                    // Display cached results immediately
+                    displaySearchResults(cachedResults, query);
+                    // Then fetch fresh results in background
+                    setTimeout(() => runGlobalSearch(), 100);
+                } else {
+                    // Trigger search after a brief delay to allow tab switch
+                    setTimeout(() => runGlobalSearch(), 300);
+                }
             }
+        }
+        
+        // Extract display logic to separate function for reuse
+        function displaySearchResults(results, query) {
+            const resultsContainer = document.getElementById('global-search-results');
+            if (!resultsContainer || !results || results.length === 0) {
+                if (resultsContainer) {
+                    resultsContainer.innerHTML = `
+                        <div class="no-results-message">
+                            <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #334155;">No patterns found</div>
+                            <div style="color: #64748b;">No strong aggregate patterns were found for "${query}".<br>
+                            Try broader or related language, or explore the suggestions above.</div>
+                        </div>
+                    `;
+                }
+                return;
+            }
+            
+            const experiences = results.slice(0, 10);
+            const copingKeywords = ['therapy', 'medication', 'support', 'family', 'friends', 'exercise', 'meditation', 'counseling'];
+            const foundCoping = copingKeywords.filter(keyword => 
+                query.toLowerCase().includes(keyword) || 
+                results.some(r => r.text && r.text.toLowerCase().includes(keyword))
+            );
+
+            let html = '';
+            
+            // Section A: Shared Experiences
+            html += '<div class="language-lens-section">';
+            html += '<div class="language-lens-section-title">How people describe this experience</div>';
+            experiences.forEach((row, idx) => {
+                html += `
+                    <div class="experience-card" style="animation-delay: ${idx * 0.05}s">
+                        <div class="experience-quote">${row.text || ''}</div>
+                        <div class="experience-meta">Commonly expressed across clusters</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            // Section B: Common Coping Approaches
+            if (foundCoping.length > 0 || results.length > 0) {
+                html += '<div class="language-lens-section">';
+                html += '<div class="language-lens-section-title">Coping approaches commonly mentioned in related language patterns</div>';
+                
+                const copingApproaches = [
+                    { label: 'Help seeking', text: 'Appears across many posts where people describe reaching out to friends, family, or professionals.' },
+                    { label: 'Support networks', text: 'Frequently mentioned across clusters describing leaning on family, friends, faith, or shared spaces online.' },
+                    { label: 'Treatment and therapy', text: 'Observed patterns where people mention therapy, medication, or other forms of care.' },
+                    { label: 'Self care', text: 'Aggregated language describing sleep, movement, writing, or art as ways to cope.' }
+                ];
+                
+                // Show relevant coping approaches based on search term
+                const relevantCoping = copingApproaches.filter(c => {
+                    const searchLower = query.toLowerCase();
+                    return searchLower.includes('help') || searchLower.includes('support') || 
+                           searchLower.includes('therapy') || searchLower.includes('treatment') ||
+                           searchLower.includes('care') || searchLower.includes('cope');
+                });
+                
+                const toShow = relevantCoping.length > 0 ? relevantCoping : copingApproaches.slice(0, 2);
+                
+                toShow.forEach((approach, idx) => {
+                    html += `
+                        <div class="coping-approach-card" style="animation-delay: ${idx * 0.1}s">
+                            <div class="coping-approach-label">${approach.label}</div>
+                            <div class="coping-approach-text">${approach.text}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            resultsContainer.innerHTML = html;
         }
         
         async function runGlobalSearch() {
@@ -1674,78 +1791,13 @@
                     throw new Error(data.error);
                 }
                 
-                if (!data.results || data.results.length === 0) {
-                    resultsContainer.innerHTML = `
-                        <div class="no-results-message">
-                            <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #334155;">No patterns found</div>
-                            <div style="color: #64748b;">No strong aggregate patterns were found for "${q}".<br>
-                            Try broader or related language, or explore the suggestions above.</div>
-                        </div>
-                    `;
-                    setTimeout(() => {
-                        if (progressBar) progressBar.classList.remove('active');
-                        if (progressFill) progressFill.style.width = '0%';
-                    }, 300);
-                    return;
-                }
-
-                // Group results into experiences and extract coping patterns
-                const experiences = data.results.slice(0, 10);
-                const copingKeywords = ['therapy', 'medication', 'support', 'family', 'friends', 'exercise', 'meditation', 'counseling'];
-                const foundCoping = copingKeywords.filter(keyword => 
-                    q.toLowerCase().includes(keyword) || 
-                    data.results.some(r => r.text.toLowerCase().includes(keyword))
-                );
-
-                let html = '';
-                
-                // Section A: Shared Experiences
-                html += '<div class="language-lens-section">';
-                html += '<div class="language-lens-section-title">How people describe this experience</div>';
-                experiences.forEach((row, idx) => {
-                    html += `
-                        <div class="experience-card" style="animation-delay: ${idx * 0.05}s">
-                            <div class="experience-quote">${row.text}</div>
-                            <div class="experience-meta">Commonly expressed across clusters</div>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-
-                // Section B: Common Coping Approaches
-                if (foundCoping.length > 0 || data.results.length > 0) {
-                    html += '<div class="language-lens-section">';
-                    html += '<div class="language-lens-section-title">Coping approaches commonly mentioned in related language patterns</div>';
-                    
-                    const copingApproaches = [
-                        { label: 'Help seeking', text: 'Appears across many posts where people describe reaching out to friends, family, or professionals.' },
-                        { label: 'Support networks', text: 'Frequently mentioned across clusters describing leaning on family, friends, faith, or shared spaces online.' },
-                        { label: 'Treatment and therapy', text: 'Observed patterns where people mention therapy, medication, or other forms of care.' },
-                        { label: 'Self care', text: 'Aggregated language describing sleep, movement, writing, or art as ways to cope.' }
-                    ];
-                    
-                    // Show relevant coping approaches based on search term
-                    const relevantCoping = copingApproaches.filter(c => {
-                        const searchLower = q.toLowerCase();
-                        return searchLower.includes('help') || searchLower.includes('support') || 
-                               searchLower.includes('therapy') || searchLower.includes('treatment') ||
-                               searchLower.includes('care') || searchLower.includes('cope');
-                    });
-                    
-                    const toShow = relevantCoping.length > 0 ? relevantCoping : copingApproaches.slice(0, 2);
-                    
-                    toShow.forEach((approach, idx) => {
-                        html += `
-                            <div class="coping-approach-card" style="animation-delay: ${idx * 0.1}s">
-                                <div class="coping-approach-label">${approach.label}</div>
-                                <div class="coping-approach-text">${approach.text}</div>
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
+                // Cache results for future use
+                if (data.results) {
+                    preloadedSearchCache[q.toLowerCase()] = data.results;
                 }
                 
-                resultsContainer.innerHTML = html;
+                // Use shared display function
+                displaySearchResults(data.results, q);
                 
                 // Hide progress bar after a brief delay
                 setTimeout(() => {
@@ -1887,6 +1939,8 @@
         loadStats();
         // Load coping summary for stigma view
         loadCopingSummary();
+        // Pre-load common search queries for instant results
+        preloadCommonSearches();
         // Clusters and visualization are loaded lazily when their tabs are opened
         
         // Refresh every 30 seconds

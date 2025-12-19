@@ -567,37 +567,42 @@
                     return Math.floor(num).toLocaleString();
                 };
                 
-                // Load comments and clusters from stats (faster animation: 800ms instead of 1500ms)
+                // Load comments and clusters from stats (instant display with minimal animation: 100ms)
                 if (document.getElementById('metric-comments') && statsData.total_comments) {
                     const el = document.getElementById('metric-comments');
-                    animateValue(el, 0, statsData.total_comments, 800, formatNumber);
+                    // Show value immediately, then animate briefly
+                    el.textContent = formatNumber(statsData.total_comments);
+                    animateValue(el, statsData.total_comments * 0.95, statsData.total_comments, 100, formatNumber);
                 }
                 if (document.getElementById('metric-clusters') && statsData.n_clusters) {
                     const el = document.getElementById('metric-clusters');
-                    animateValue(el, 0, statsData.n_clusters, 800, formatNumber);
+                    el.textContent = formatNumber(statsData.n_clusters);
+                    animateValue(el, statsData.n_clusters * 0.95, statsData.n_clusters, 100, formatNumber);
                 }
                 
-                // Load downloads and sessions from Supabase metrics (faster animation: 800ms instead of 1500ms)
+                // Load downloads and sessions from Supabase metrics (instant display with minimal animation: 100ms)
                 if (document.getElementById('metric-downloads')) {
                     const el = document.getElementById('metric-downloads');
                     const value = metricsData.downloads || 6503;
-                    animateValue(el, 0, value, 800, (n) => Math.floor(n).toLocaleString());
+                    el.textContent = Math.floor(value).toLocaleString();
+                    animateValue(el, value * 0.95, value, 100, (n) => Math.floor(n).toLocaleString());
                 }
                 if (document.getElementById('metric-sessions')) {
                     const el = document.getElementById('metric-sessions');
                     const value = metricsData.exploratory_sessions || 21042;
-                    animateValue(el, 0, value, 800, (n) => Math.floor(n).toLocaleString());
+                    el.textContent = Math.floor(value).toLocaleString();
+                    animateValue(el, value * 0.95, value, 100, (n) => Math.floor(n).toLocaleString());
                 }
             } catch (error) {
                 console.error('Error loading metrics:', error);
-                // Fallback to default values if API fails (faster animation: 800ms)
+                // Fallback to default values if API fails (instant display)
                 if (document.getElementById('metric-downloads')) {
                     const el = document.getElementById('metric-downloads');
-                    animateValue(el, 0, 6503, 800, (n) => Math.floor(n).toLocaleString());
+                    el.textContent = '6,503';
                 }
                 if (document.getElementById('metric-sessions')) {
                     const el = document.getElementById('metric-sessions');
-                    animateValue(el, 0, 21042, 800, (n) => Math.floor(n).toLocaleString());
+                    el.textContent = '21,042';
                 }
             }
         }

@@ -12,11 +12,15 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from flask import Flask, render_template, jsonify, send_file, request
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import pandas as pd
 import json
 import yaml
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from functools import lru_cache
+from threading import Lock
 
 # Load environment variables from .env file
 load_dotenv()
@@ -26,6 +30,14 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
+
+# Initialize rate limiter
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
 
 # Base paths (project root = two levels above this file: src/dashboard/app.py)
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -61,6 +73,88 @@ def get_client_id():
     # Create a hash from available headers
     identifier = f"{user_agent}_{accept_language}"
     return hashlib.md5(identifier.encode()).hexdigest()
+
+
+def sanitize_search_query(query):
+    """
+    Sanitize and validate search query to prevent injections and malicious input.
+    Returns (is_valid, sanitized_query, error_message)
+    """
+    if not query:
+        return False, "", "Query cannot be empty"
+    
+    # Remove any null bytes
+    query = query.replace('\x00', '')
+    
+    # Limit query length (prevent DoS)
+    if len(query) > 200:
+        return False, "", "Query is too long (maximum 200 characters)"
+    
+    # Check for suspicious patterns
+    suspicious_patterns = [
+        r'<script',  # XSS attempts
+        r'javascript:',  # JavaScript injection
+        r'on\w+\s*=',  # Event handlers (onclick, onerror, etc.)
+        r'data:text/html',  # Data URI XSS
+        r'vbscript:',  # VBScript injection
+        r'expression\s*\(',  # CSS expression
+        r'@import',  # CSS import
+        r'url\s*\(',  # CSS url()
+        r'SELECT\s+.*\s+FROM',  # SQL injection patterns
+        r'UNION\s+SELECT',  # SQL injection
+        r'DROP\s+TABLE',  # SQL injection
+        r'DELETE\s+FROM',  # SQL injection
+        r'INSERT\s+INTO',  # SQL injection
+        r'UPDATE\s+.*\s+SET',  # SQL injection
+        r'EXEC\s*\(',  # Command execution
+        r'EXECUTE\s*\(',  # Command execution
+        r'\.\.\/',  # Path traversal
+        r'\.\.\\',  # Path traversal (Windows)
+    ]
+    
+    query_lower = query.lower()
+    for pattern in suspicious_patterns:
+        if re.search(pattern, query_lower, re.IGNORECASE):
+            return False, "", "Query contains invalid characters or patterns"
+    
+    # Allow only alphanumeric, spaces, and common punctuation
+    # Remove any control characters
+    sanitized = ''.join(char for char in query if ord(char) >= 32 or char in '\n\r\t')
+    
+    # Trim whitespace
+    sanitized = sanitized.strip()
+    
+    if not sanitized:
+        return False, "", "Query cannot be empty after sanitization"
+    
+    return True, sanitized, None
+
+
+# Search result cache with thread-safe access
+_search_cache = {}
+_cache_lock = Lock()
+_cache_max_size = 100  # Maximum number of cached queries
+
+
+def _get_cached_search(query, limit):
+    """Get cached search results if available."""
+    cache_key = f"{query.lower()}_{limit}"
+    with _cache_lock:
+        if cache_key in _search_cache:
+            return _search_cache[cache_key]
+    return None
+
+
+def _set_cached_search(query, limit, results):
+    """Cache search results."""
+    cache_key = f"{query.lower()}_{limit}"
+    with _cache_lock:
+        # Simple LRU: remove oldest if cache is full
+        if len(_search_cache) >= _cache_max_size:
+            # Remove first (oldest) item
+            oldest_key = next(iter(_search_cache))
+            del _search_cache[oldest_key]
+        _search_cache[cache_key] = results
 
 
 def _init_impact_tables():
@@ -701,6 +795,48 @@ def get_metrics():
         })
 
 
+@app.route('/api/search/preload')
+def preload_common_searches():
+    """Pre-load common search queries to warm up the cache."""
+    common_queries = ['pain', 'support', 'therapy', 'family', 'medication']
+    results = {}
+    
+    # Load data once
+    df, _ = _load_search_data()
+    if df is None:
+        return jsonify({"error": "Search data not available"}), 503
+    
+    for query in common_queries:
+        try:
+            is_valid, sanitized_query, _ = sanitize_search_query(query)
+            if not is_valid:
+                continue
+            
+            # Check cache first
+            cached = _get_cached_search(sanitized_query, 25)
+            if cached is not None:
+                results[query] = cached
+                continue
+            
+            # Perform search
+            escaped_query = re.escape(sanitized_query)
+            mask = df["text"].astype(str).str.contains(escaped_query, case=False, na=False, regex=True)
+            df_filtered = df[mask].head(25).copy()
+            
+            cols = [c for c in ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"] if c in df_filtered.columns]
+            query_results = df_filtered[cols].to_dict("records")
+            
+            # Cache results
+            _set_cached_search(sanitized_query, 25, query_results)
+            results[query] = query_results
+            
+        except Exception as e:
+            logger.warning(f"Error preloading query '{query}': {e}")
+            continue
+    
+    return jsonify({"status": "success", "preloaded": list(results.keys())})
+
+
 @app.route('/api/track/search', methods=['POST'])
 def track_search():
     """Track a search."""
@@ -736,47 +872,104 @@ def track_session():
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
 
+# Global variables for loaded data (to avoid reloading on every request)
+_processed_df = None
+_cluster_df = None
+_data_lock = Lock()
+_data_loaded = False
+
+
+def _load_search_data():
+    """Load search data into memory (thread-safe, loads once)."""
+    global _processed_df, _cluster_df, _data_loaded
+    
+    if _data_loaded:
+        return _processed_df, _cluster_df
+    
+    with _data_lock:
+        # Double-check after acquiring lock
+        if _data_loaded:
+            return _processed_df, _cluster_df
+        
+        try:
+            processed_path = output_dir / "processed_comments.csv"
+            if not processed_path.exists():
+                logger.error("Processed comments file not found")
+                return None, None
+            
+            _processed_df = pd.read_csv(processed_path)
+            if "text" not in _processed_df.columns:
+                logger.error("No text column in processed data")
+                return None, None
+            
+            # Load cluster data if available
+            cluster_path = output_dir / "cluster_results.csv"
+            if cluster_path.exists() and "id" in _processed_df.columns:
+                try:
+                    _cluster_df = pd.read_csv(cluster_path)[["id", "cluster"]]
+                    # Pre-merge cluster data for faster searches
+                    _processed_df = _processed_df.merge(_cluster_df, on="id", how="left")
+                except Exception as e:
+                    logger.warning(f"Could not load cluster data: {e}")
+                    _cluster_df = None
+            
+            _data_loaded = True
+            logger.info("Search data loaded into memory")
+            return _processed_df, _cluster_df
+            
+        except Exception as e:
+            logger.error(f"Error loading search data: {e}")
+            return None, None
+
+
 @app.route('/api/search')
+@limiter.limit("10 per minute")  # Rate limit: 10 searches per minute per IP
 def search_comments():
     """Simple keyword search over processed comments (and clusters if available)."""
     try:
         query = (request.args.get("q") or "").strip()
         limit = int(request.args.get("limit", 25))
         
-        # Note: Search tracking is handled by /api/track/search endpoint
-        # to avoid double-counting when frontend calls it
+        # Validate and sanitize input
+        is_valid, sanitized_query, error_msg = sanitize_search_query(query)
+        if not is_valid:
+            return jsonify({"error": error_msg}), 400
         
-        if not query:
-            return jsonify({"results": []})
-
-        processed_path = output_dir / "processed_comments.csv"
-        if not processed_path.exists():
-            return jsonify({"error": "Processed comments not found"}), 404
-
-        df = pd.read_csv(processed_path)
-        if "text" not in df.columns:
-            return jsonify({"error": "No text column in processed data"}), 500
+        query = sanitized_query
+        
+        # Check cache first
+        cached_result = _get_cached_search(query, limit)
+        if cached_result is not None:
+            return jsonify({"results": cached_result})
+        
+        # Load data (cached in memory)
+        df, _ = _load_search_data()
+        if df is None:
+            return jsonify({"error": "Search data not available"}), 503
 
         # Escape regex special characters to treat query as literal string
         escaped_query = re.escape(query)
         mask = df["text"].astype(str).str.contains(escaped_query, case=False, na=False, regex=True)
-        df = df[mask]
+        df_filtered = df[mask].copy()
 
-        cluster_path = output_dir / "cluster_results.csv"
-        if cluster_path.exists() and "id" in df.columns:
-            try:
-                cluster_df = pd.read_csv(cluster_path)[["id", "cluster"]]
-                df = df.merge(cluster_df, on="id", how="left")
-            except Exception as e:
-                logger.error(f"Error merging clusters into search results: {e}")
-
-        df = df.head(limit)
-        cols = [c for c in ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"] if c in df.columns]
-        results = df[cols].to_dict("records")
+        # Limit results
+        df_filtered = df_filtered.head(limit)
+        
+        # Select columns
+        cols = [c for c in ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"] if c in df_filtered.columns]
+        results = df_filtered[cols].to_dict("records")
+        
+        # Cache results
+        _set_cached_search(query, limit, results)
+        
         return jsonify({"results": results})
+        
+    except ValueError as e:
+        logger.error(f"Invalid input in search_comments: {e}")
+        return jsonify({"error": "Invalid search parameters"}), 400
     except Exception as e:
-        logger.error(f"Error in search_comments: {e}")
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Error in search_comments: {e}", exc_info=True)
+        return jsonify({"error": "An error occurred while searching. Please try again."}), 500
 
 
 if __name__ == "__main__":
