@@ -804,18 +804,21 @@ def preload_common_searches():
     # Load data once
     df, _ = _load_search_data()
     if df is None:
-        return jsonify({"error": "Search data not available"}), 503
+        logger.error("Search data not available for preloading")
+        return jsonify({"error": "Search data not available", "preloaded": []}), 503
     
     for query in common_queries:
         try:
             is_valid, sanitized_query, _ = sanitize_search_query(query)
             if not is_valid:
+                logger.warning(f"Query '{query}' failed validation")
                 continue
             
             # Check cache first
             cached = _get_cached_search(sanitized_query, 25)
             if cached is not None:
                 results[query] = cached
+                logger.debug(f"Using cached results for '{query}'")
                 continue
             
             # Perform search
@@ -829,11 +832,13 @@ def preload_common_searches():
             # Cache results
             _set_cached_search(sanitized_query, 25, query_results)
             results[query] = query_results
+            logger.info(f"Pre-loaded {len(query_results)} results for '{query}'")
             
         except Exception as e:
-            logger.warning(f"Error preloading query '{query}': {e}")
+            logger.warning(f"Error preloading query '{query}': {e}", exc_info=True)
             continue
     
+    logger.info(f"Pre-loading complete. Successfully pre-loaded {len(results)} queries.")
     return jsonify({"status": "success", "preloaded": list(results.keys())})
 
 
@@ -923,9 +928,9 @@ def _load_search_data():
 
 
 @app.route('/api/search')
-@limiter.limit("10 per minute")  # Rate limit: 10 searches per minute per IP
+@limiter.limit("20 per minute")  # Rate limit: 20 searches per minute per IP (increased for better UX)
 def search_comments():
-    """Simple keyword search over processed comments (and clusters if available)."""
+    """Enhanced keyword search over processed comments with multiple matching strategies."""
     try:
         query = (request.args.get("q") or "").strip()
         limit = int(request.args.get("limit", 25))
@@ -947,22 +952,92 @@ def search_comments():
         if df is None:
             return jsonify({"error": "Search data not available"}), 503
 
-        # Escape regex special characters to treat query as literal string
+        # Try multiple search strategies for better results
+        results = pd.DataFrame()  # Initialize as empty DataFrame
+        
+        # Strategy 1: Exact word match (highest priority)
+        # Use word boundaries to match whole words
         escaped_query = re.escape(query)
-        mask = df["text"].astype(str).str.contains(escaped_query, case=False, na=False, regex=True)
-        df_filtered = df[mask].copy()
-
-        # Limit results
-        df_filtered = df_filtered.head(limit)
+        word_boundary_pattern = r'\b' + escaped_query + r'\b'
+        mask1 = df["text"].astype(str).str.contains(word_boundary_pattern, case=False, na=False, regex=True)
+        exact_matches = df[mask1].copy()
+        
+        if len(exact_matches) > 0:
+            # Sort by relevance (like_count if available, or just take first N)
+            if "like_count" in exact_matches.columns:
+                exact_matches = exact_matches.sort_values("like_count", ascending=False)
+            results = exact_matches.head(limit).copy()
+        
+        # Strategy 2: If not enough results, try partial word match
+        if len(results) < limit:
+            # Remove word boundary requirement for partial matches
+            partial_pattern = escaped_query
+            mask2 = df["text"].astype(str).str.contains(partial_pattern, case=False, na=False, regex=True)
+            partial_matches = df[mask2].copy()
+            
+            # Exclude results we already have
+            if len(results) > 0 and "id" in partial_matches.columns and "id" in results.columns:
+                existing_ids = set(results["id"].astype(str))
+                partial_matches = partial_matches[~partial_matches["id"].astype(str).isin(existing_ids)]
+            
+            if len(partial_matches) > 0:
+                if "like_count" in partial_matches.columns:
+                    partial_matches = partial_matches.sort_values("like_count", ascending=False)
+                # Add remaining results up to limit
+                needed = limit - len(results)
+                additional = partial_matches.head(needed)
+                if len(results) > 0:
+                    results = pd.concat([results, additional], ignore_index=True)
+                else:
+                    results = additional
+        
+        # Strategy 3: If still not enough, try fuzzy matching with common variations
+        if len(results) < limit and len(query) > 3:
+            # Try plural/singular variations
+            query_variations = [query]
+            if query.endswith('s'):
+                query_variations.append(query[:-1])  # Remove 's' for singular
+            elif not query.endswith('s'):
+                query_variations.append(query + 's')  # Add 's' for plural
+            
+            # Try each variation
+            for variation in query_variations:
+                if len(results) >= limit:
+                    break
+                escaped_var = re.escape(variation)
+                mask3 = df["text"].astype(str).str.contains(escaped_var, case=False, na=False, regex=True)
+                var_matches = df[mask3].copy()
+                
+                # Exclude existing results
+                if len(results) > 0 and "id" in var_matches.columns and "id" in results.columns:
+                    existing_ids = set(results["id"].astype(str))
+                    var_matches = var_matches[~var_matches["id"].astype(str).isin(existing_ids)]
+                
+                if len(var_matches) > 0:
+                    if "like_count" in var_matches.columns:
+                        var_matches = var_matches.sort_values("like_count", ascending=False)
+                    needed = limit - len(results)
+                    additional = var_matches.head(needed)
+                    if len(results) > 0:
+                        results = pd.concat([results, additional], ignore_index=True)
+                    else:
+                        results = additional
+        
+        # Limit final results
+        results = results.head(limit) if len(results) > 0 else pd.DataFrame()
         
         # Select columns
-        cols = [c for c in ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"] if c in df_filtered.columns]
-        results = df_filtered[cols].to_dict("records")
+        cols = [c for c in ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"] if c in results.columns]
+        if len(results) > 0:
+            results_dict = results[cols].to_dict("records")
+        else:
+            results_dict = []
         
-        # Cache results
-        _set_cached_search(query, limit, results)
+        # Cache results (even empty results to avoid repeated searches)
+        _set_cached_search(query, limit, results_dict)
         
-        return jsonify({"results": results})
+        logger.info(f"Search for '{query}' returned {len(results_dict)} results")
+        return jsonify({"results": results_dict})
         
     except ValueError as e:
         logger.error(f"Invalid input in search_comments: {e}")

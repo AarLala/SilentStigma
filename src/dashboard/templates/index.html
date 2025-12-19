@@ -986,12 +986,12 @@
                                 class="language-lens-input" 
                                 type="text" 
                                 placeholder="Search a topic to explore aggregated experiences (e.g., 'pain', 'substance', 'stress', 'support')" 
-                                onkeypress="if(event.key === 'Enter') runGlobalSearch()"
+                                onkeypress="if(event.key === 'Enter' && !window.isSearching) runGlobalSearch()"
                             />
                             <div class="lens-search-count">
                                 <span id="search-count-text">9,382</span> searches
                             </div>
-                            <button class="lens-search-button" onclick="runGlobalSearch()">
+                            <button class="lens-search-button" onclick="if(!window.isSearching) runGlobalSearch()">
                                 Explore
                             </button>
                             <div class="search-progress-bar" id="search-progress-bar">
@@ -1612,33 +1612,105 @@
         // Cache for pre-loaded search results
         const preloadedSearchCache = {};
         
+        // Flag to prevent multiple simultaneous searches
+        let isSearching = false;
+        // Make it accessible globally for inline handlers
+        window.isSearching = false;
+        // Timeout handle for search timeout protection
+        let searchTimeoutHandle = null;
+        // Debounce timer for spam protection
+        let searchDebounceTimer = null;
+        // Track if page is fully loaded
+        let pageFullyLoaded = false;
+        // Last search query to prevent duplicate searches
+        let lastSearchQuery = null;
+        let lastSearchTime = 0;
+        
+        // Reset search state on page load/refresh
+        function resetSearchState() {
+            isSearching = false;
+            window.isSearching = false;
+            const input = document.getElementById('global-search-input');
+            const searchButton = document.querySelector('.lens-search-button');
+            const resultsContainer = document.getElementById('global-search-results');
+            if (input) {
+                input.disabled = false;
+                input.style.opacity = '1';
+            }
+            if (searchButton) {
+                searchButton.disabled = false;
+                searchButton.style.opacity = '1';
+                searchButton.style.cursor = 'pointer';
+            }
+            if (searchTimeoutHandle) {
+                clearTimeout(searchTimeoutHandle);
+                searchTimeoutHandle = null;
+            }
+            if (searchDebounceTimer) {
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = null;
+            }
+            // Clear any error messages on reset
+            if (resultsContainer && pageFullyLoaded) {
+                // Only clear if it's an error message, not actual results
+                const currentContent = resultsContainer.innerHTML;
+                if (currentContent.includes('Unable to complete search') || 
+                    currentContent.includes('no-results-message')) {
+                    resultsContainer.innerHTML = '';
+                }
+            }
+        }
+        
+        // Initialize on page load - clear everything
+        resetSearchState();
+        
+        // Mark page as loaded after a short delay
+        setTimeout(() => {
+            pageFullyLoaded = true;
+        }, 1000);
+        
         // Pre-load common search queries on page load
         async function preloadCommonSearches() {
             const commonQueries = ['pain', 'support', 'therapy', 'family', 'medication'];
             try {
-                // Pre-load on backend
+                // Pre-load on backend first (this warms up the server cache)
                 await fetch('/api/search/preload').catch(() => {});
                 
-                // Pre-load on frontend for instant display
-                for (const query of commonQueries) {
+                // Pre-load on frontend for instant display (do this in parallel)
+                const preloadPromises = commonQueries.map(async (query) => {
                     try {
                         const resp = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=25`);
                         if (resp.ok) {
                             const data = await resp.json();
-                            if (data.results) {
+                            if (data.results && data.results.length > 0) {
                                 preloadedSearchCache[query.toLowerCase()] = data.results;
+                                console.log(`Pre-loaded results for "${query}"`);
                             }
+                        } else {
+                            console.warn(`Failed to preload "${query}": ${resp.status}`);
                         }
                     } catch (e) {
                         console.warn(`Error preloading query "${query}":`, e);
                     }
-                }
+                });
+                
+                // Wait for all preloads to complete (but don't block page load)
+                Promise.all(preloadPromises).then(() => {
+                    console.log('Pre-loading complete. Suggestion chips are ready.');
+                });
             } catch (e) {
                 console.warn('Error preloading common searches:', e);
             }
         }
         
         function setSearchQuery(query) {
+            // Don't allow new searches if one is already in progress (unless we have cached results)
+            const cachedResults = preloadedSearchCache[query.toLowerCase()];
+            if (isSearching && (!cachedResults || cachedResults.length === 0)) {
+                console.log('Search in progress, ignoring suggestion chip click');
+                return;
+            }
+            
             const input = document.getElementById('global-search-input');
             if (input) {
                 input.value = query;
@@ -1650,15 +1722,18 @@
                 }
                 
                 // Check if we have pre-loaded results for instant display
-                const cachedResults = preloadedSearchCache[query.toLowerCase()];
-                if (cachedResults) {
+                if (cachedResults && cachedResults.length > 0) {
                     // Display cached results immediately
                     displaySearchResults(cachedResults, query);
-                    // Then fetch fresh results in background
-                    setTimeout(() => runGlobalSearch(), 100);
+                    // Track the search (but don't show error if it fails since we have cached results)
+                    fetch('/api/track/search', { method: 'POST' }).catch(() => {});
+                    // Optionally refresh in background (but don't overwrite if it fails)
+                    setTimeout(() => {
+                        runGlobalSearch(true); // Pass flag to indicate we have cached results
+                    }, 500);
                 } else {
-                    // Trigger search after a brief delay to allow tab switch
-                    setTimeout(() => runGlobalSearch(), 300);
+                    // No cached results, trigger search normally
+                    setTimeout(() => runGlobalSearch(false), 300);
                 }
             }
         }
@@ -1737,7 +1812,19 @@
             resultsContainer.innerHTML = html;
         }
         
-        async function runGlobalSearch() {
+        async function runGlobalSearch(hasCachedResults = false) {
+            // Don't run searches until page is fully loaded
+            if (!pageFullyLoaded && !hasCachedResults) {
+                console.log('Page not fully loaded, deferring search');
+                return;
+            }
+            
+            // Prevent multiple simultaneous searches
+            if (isSearching && !hasCachedResults) {
+                console.log('Search already in progress, ignoring duplicate request');
+                return;
+            }
+            
             const input = document.getElementById('global-search-input');
             if (!input) return;
             
@@ -1745,19 +1832,53 @@
             const resultsContainer = document.getElementById('global-search-results');
             const progressBar = document.getElementById('search-progress-bar');
             const progressFill = document.getElementById('search-progress-fill');
+            const searchButton = document.querySelector('.lens-search-button');
             if (!resultsContainer) return;
             
             if (!q) {
                 resultsContainer.innerHTML = '';
                 if (progressBar) progressBar.classList.remove('active');
                 if (progressFill) progressFill.style.width = '0%';
+                resetSearchState();
                 return;
             }
+            
+            // Spam protection: ignore if same query within 500ms
+            const now = Date.now();
+            if (!hasCachedResults && q === lastSearchQuery && (now - lastSearchTime) < 500) {
+                console.log('Duplicate search query ignored (spam protection)');
+                return;
+            }
+            lastSearchQuery = q;
+            lastSearchTime = now;
+            
+            // Set searching flag and disable input/button
+            if (!hasCachedResults) {
+                isSearching = true;
+                window.isSearching = true;
+                if (input) input.disabled = true;
+                if (searchButton) {
+                    searchButton.disabled = true;
+                    searchButton.style.opacity = '0.6';
+                    searchButton.style.cursor = 'not-allowed';
+                }
+                
+                // Safety timeout: reset after 30 seconds if search doesn't complete
+                if (searchTimeoutHandle) clearTimeout(searchTimeoutHandle);
+                searchTimeoutHandle = setTimeout(() => {
+                    console.warn('Search timeout - resetting search state');
+                    resetSearchState();
+                }, 30000);
+            }
 
-            // Show progress bar
-            if (progressBar) progressBar.classList.add('active');
-            if (progressFill) {
-                progressFill.style.width = '30%';
+            // If we have cached results, don't show loading state
+            if (!hasCachedResults) {
+                // Show progress bar
+                if (progressBar) progressBar.classList.add('active');
+                if (progressFill) {
+                    progressFill.style.width = '30%';
+                }
+                resultsContainer.innerHTML = '<div class="loading">Searching...</div>';
             }
 
             // Track the search (backend also tracks, but this ensures UI updates immediately)
@@ -1769,26 +1890,66 @@
                 console.warn('Error tracking search:', e);
             }
 
-            if (progressFill) progressFill.style.width = '50%';
-            resultsContainer.innerHTML = '<div class="loading">Searching...</div>';
+            if (!hasCachedResults && progressFill) progressFill.style.width = '50%';
 
             try {
-                const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=25`);
+                // Add timeout to fetch request (15 seconds)
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
                 
-                if (progressFill) progressFill.style.width = '80%';
+                const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=25`, {
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!hasCachedResults && progressFill) progressFill.style.width = '80%';
                 
                 if (!resp.ok) {
                     const errorData = await resp.json().catch(() => ({}));
+                    // If we have cached results, don't show error, just silently fail
+                    if (hasCachedResults) {
+                        console.warn('Background search refresh failed, using cached results');
+                        if (progressBar) progressBar.classList.remove('active');
+                        if (progressFill) progressFill.style.width = '0%';
+                        resetSearchState();
+                        return;
+                    }
                     throw new Error(errorData.error || `Search failed with status ${resp.status}`);
                 }
                 
                 const data = await resp.json();
                 
-                if (progressFill) progressFill.style.width = '100%';
+                if (!hasCachedResults && progressFill) progressFill.style.width = '100%';
                 
                 // Check for error in response
                 if (data.error) {
+                    // If we have cached results, don't show error
+                    if (hasCachedResults) {
+                        console.warn('Background search refresh returned error, using cached results');
+                        if (progressBar) progressBar.classList.remove('active');
+                        if (progressFill) progressFill.style.width = '0%';
+                        resetSearchState();
+                        return;
+                    }
                     throw new Error(data.error);
+                }
+                
+                // Handle empty results gracefully (not an error, just no matches)
+                if (!data.results || data.results.length === 0) {
+                    // Cache empty results to avoid repeated searches
+                    preloadedSearchCache[q.toLowerCase()] = [];
+                    // Display "no results" message
+                    displaySearchResults([], q);
+                    if (!hasCachedResults) {
+                        setTimeout(() => {
+                            if (progressBar) progressBar.classList.remove('active');
+                            if (progressFill) progressFill.style.width = '0%';
+                            // Re-enable input and button
+                            resetSearchState();
+                        }, 200);
+                    }
+                    return;
                 }
                 
                 // Cache results for future use
@@ -1799,45 +1960,99 @@
                 // Use shared display function
                 displaySearchResults(data.results, q);
                 
-                // Hide progress bar after a brief delay
-                setTimeout(() => {
-                    if (progressBar) progressBar.classList.remove('active');
+                // Hide progress bar after a brief delay and re-enable controls
+                if (!hasCachedResults) {
                     setTimeout(() => {
-                        if (progressFill) progressFill.style.width = '0%';
-                    }, 300);
-                }, 200);
+                        if (progressBar) progressBar.classList.remove('active');
+                        setTimeout(() => {
+                            if (progressFill) progressFill.style.width = '0%';
+                            // Re-enable input and button
+                            resetSearchState();
+                        }, 300);
+                    }, 200);
+                }
                 
             } catch (e) {
+                // Clear timeout on error
+                if (searchTimeoutHandle) {
+                    clearTimeout(searchTimeoutHandle);
+                    searchTimeoutHandle = null;
+                }
+                
+                // Check if it was an abort (timeout)
+                if (e.name === 'AbortError') {
+                    console.error('Search request timed out');
+                    resetSearchState();
+                    // Only show timeout error if it was a user-initiated search (not cached) and page is loaded
+                    if (!hasCachedResults && pageFullyLoaded) {
+                        resultsContainer.innerHTML = `
+                            <div class="no-results-message">
+                                <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #dc2626;">Search timed out</div>
+                                <div style="color: #64748b;">The search took too long. Please try again with a different query.</div>
+                            </div>
+                        `;
+                    }
+                    return;
+                }
                 console.error('Error running search:', e);
+                
+                // If we have cached results, don't show error, just silently fail
+                if (hasCachedResults) {
+                    console.warn('Background search refresh failed, using cached results');
+                    if (progressBar) progressBar.classList.remove('active');
+                    if (progressFill) progressFill.style.width = '0%';
+                    resetSearchState();
+                    return;
+                }
                 
                 // Hide progress bar
                 if (progressBar) progressBar.classList.remove('active');
                 if (progressFill) progressFill.style.width = '0%';
                 
-                // Show user-friendly error message
+                // Re-enable input and button (use resetSearchState to ensure cleanup)
+                resetSearchState();
+                
+                // Only show error if page is fully loaded and it was a user-initiated search
+                // Don't show errors during page load or initialization
+                if (!pageFullyLoaded) {
+                    console.warn('Error occurred during page load, not showing error message');
+                    return;
+                }
+                
+                // Show user-friendly error message only for actual errors
                 let errorMessage = 'Unable to complete search at this time.';
                 let suggestion = 'Please try again or use one of the suggested terms above.';
+                let showError = true;
                 
                 if (e.message) {
                     const msg = e.message.toLowerCase();
                     if (msg.includes('pattern') || msg.includes('regex') || msg.includes('string')) {
                         errorMessage = 'Search query contains special characters that cannot be processed.';
                         suggestion = 'Try using simpler words without special characters (e.g., "pain" instead of "pain!").';
-                    } else if (msg.includes('network') || msg.includes('fetch')) {
+                    } else if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch')) {
                         errorMessage = 'Connection issue detected.';
                         suggestion = 'Please check your internet connection and try again.';
                     } else if (msg.includes('not found') || msg.includes('404')) {
                         errorMessage = 'Search service is temporarily unavailable.';
                         suggestion = 'Please try again in a moment.';
+                    } else if (msg.includes('rate limit') || msg.includes('too many') || msg.includes('429')) {
+                        errorMessage = 'Too many searches. Please wait a moment.';
+                        suggestion = 'You can continue viewing the results above.';
+                    } else if (msg.includes('aborted') || msg.includes('cancel')) {
+                        // Don't show error for aborted requests
+                        showError = false;
                     }
                 }
                 
-                resultsContainer.innerHTML = `
-                    <div class="no-results-message">
-                        <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #dc2626;">${errorMessage}</div>
-                        <div style="color: #64748b;">${suggestion}</div>
-                    </div>
-                `;
+                // Only show error if it's a real error worth showing
+                if (showError) {
+                    resultsContainer.innerHTML = `
+                        <div class="no-results-message">
+                            <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #dc2626;">${errorMessage}</div>
+                            <div style="color: #64748b;">${suggestion}</div>
+                        </div>
+                    `;
+                }
             }
         }
         
@@ -1941,6 +2156,47 @@
         loadCopingSummary();
         // Pre-load common search queries for instant results
         preloadCommonSearches();
+        
+        // Reset search state on page load/refresh - clear any error messages
+        resetSearchState();
+        
+        // Clear results container on page load to remove any stale error messages
+        const resultsContainer = document.getElementById('global-search-results');
+        if (resultsContainer) {
+            resultsContainer.innerHTML = '';
+        }
+        
+        // Also reset on page visibility change (when user switches tabs and comes back)
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                // Page is now visible, ensure search state is reset
+                resetSearchState();
+            }
+        });
+        
+        // Reset on window focus (in case of issues)
+        window.addEventListener('focus', () => {
+            resetSearchState();
+        });
+        
+        // Clear any error messages when switching to lens tab
+        const lensTab = document.querySelector('[data-tab="lens"]');
+        if (lensTab) {
+            lensTab.addEventListener('click', () => {
+                // Small delay to ensure tab is switched
+                setTimeout(() => {
+                    const container = document.getElementById('global-search-results');
+                    if (container) {
+                        const content = container.innerHTML;
+                        // Only clear if it's an error message, not actual results
+                        if (content.includes('Unable to complete search') || 
+                            (content.includes('no-results-message') && content.includes('dc2626'))) {
+                            container.innerHTML = '';
+                        }
+                    }
+                }, 100);
+            });
+        }
         // Clusters and visualization are loaded lazily when their tabs are opened
         
         // Refresh every 30 seconds
