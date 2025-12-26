@@ -1,0 +1,11 @@
+app = "silentstigma"
+
+[env]
+  PORT = "10000"
+
+[[services]]
+  internal_port = 10000
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
