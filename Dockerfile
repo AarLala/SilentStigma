@@ -2,10 +2,12 @@ FROM python:3.11-bullseye
 
 WORKDIR /app
 
-# Runtime libs for NumPy / SciPy / hdbscan wheels
 RUN apt-get update && apt-get install -y \
     libstdc++6 \
     libgomp1 \
+    libatlas-base-dev \
+    libblas3 \
+    liblapack3 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
