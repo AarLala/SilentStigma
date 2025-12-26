@@ -944,6 +944,7 @@
             <div>
                 <button class="btn" onclick="exportProcessed()" title="Download cleaned comment level dataset">Download processed dataset</button>
                 <button class="btn btn-secondary" onclick="exportAll()" title="Download dataset with cluster labels">Download cluster dataset</button>
+                <button class="btn" onclick="showCitation()" style="background: #f1f5f9; color: #0a0a0a; border: 1px solid #e2e8f0; margin-left: 0.5rem;" title="Get citation information">Cite Dataset</button>
             </div>
         </div>
     </div>
@@ -1669,9 +1670,55 @@
             pageFullyLoaded = true;
         }, 1000);
         
+        // Pre-stored search queries (instant access, loaded from backend)
+        let PRESTORED_SEARCH_QUERIES = ['pain', 'support', 'therapy', 'family', 'medication'];
+        
+        // Load pre-stored search queries from backend on page load
+        async function loadSearchQueries() {
+            try {
+                const resp = await fetch('/api/search/queries');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    PRESTORED_SEARCH_QUERIES = data.queries || PRESTORED_SEARCH_QUERIES;
+                    // Update the suggestion chips dynamically
+                    updateSuggestionChips();
+                }
+            } catch (e) {
+                console.warn('Failed to load search queries, using defaults:', e);
+            }
+        }
+        
+        // Update suggestion chips with pre-stored queries
+        function updateSuggestionChips() {
+            const suggestionsContainer = document.querySelector('.lens-suggestions');
+            if (!suggestionsContainer) return;
+            
+            // Remove existing chips (keep the label)
+            const label = suggestionsContainer.querySelector('.lens-suggestions-label');
+            suggestionsContainer.innerHTML = '';
+            if (label) {
+                suggestionsContainer.appendChild(label);
+            } else {
+                const newLabel = document.createElement('span');
+                newLabel.className = 'lens-suggestions-label';
+                newLabel.textContent = 'Try:';
+                suggestionsContainer.appendChild(newLabel);
+            }
+            
+            // Add chips for each pre-stored query
+            PRESTORED_SEARCH_QUERIES.forEach(query => {
+                const chip = document.createElement('button');
+                chip.className = 'lens-suggestion-chip';
+                chip.textContent = query;
+                chip.onclick = () => setSearchQuery(query);
+                suggestionsContainer.appendChild(chip);
+            });
+        }
+        
         // Pre-load common search queries on page load
         async function preloadCommonSearches() {
-            const commonQueries = ['pain', 'support', 'therapy', 'family', 'medication'];
+            // Use pre-stored queries
+            const commonQueries = PRESTORED_SEARCH_QUERIES;
             try {
                 // Pre-load on backend first (this warms up the server cache)
                 await fetch('/api/search/preload').catch(() => {});
@@ -2154,6 +2201,8 @@
         loadStats();
         // Load coping summary for stigma view
         loadCopingSummary();
+        // Load pre-stored search queries from backend
+        loadSearchQueries();
         // Pre-load common search queries for instant results
         preloadCommonSearches();
         
@@ -2203,7 +2252,55 @@
         setInterval(() => {
             loadStats();
         }, 30000);
+        
+        function showCitation() {
+            document.getElementById('citation-modal').style.display = 'flex';
+        }
+        
+        function copyBibtex() {
+            const bibtex = document.getElementById('bibtex-citation').textContent;
+            navigator.clipboard.writeText(bibtex).then(() => {
+                alert('BibTeX citation copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy. Please select and copy manually.');
+            });
+        }
+        
+        function copyPlainCitation() {
+            const citation = 'Lala, A. (2025). SilenceVoice: A Dataset for Analyzing Mental Health Stigma in Public YouTube Conversations. Retrieved from https://silentstigma.org';
+            navigator.clipboard.writeText(citation).then(() => {
+                alert('Citation copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy. Please select and copy manually.');
+            });
+        }
     </script>
+    
+    <!-- BibTeX Citation Modal -->
+    <div id="citation-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 800px; max-height: 90vh; overflow-y: auto; margin: 2rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.5rem; font-weight: 600; color: #0a0a0a; margin: 0;">Cite This Dataset</h2>
+                <button onclick="document.getElementById('citation-modal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; padding: 0.25rem 0.5rem;">&times;</button>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1rem; font-weight: 600; color: #059669; margin-bottom: 0.75rem;">BibTeX</h3>
+                <pre id="bibtex-citation" style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; font-family: 'Courier New', monospace; font-size: 0.875rem; line-height: 1.6; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">@dataset{lala2025silencevoice,
+  author = {Lala, Aarav},
+  title = {SilenceVoice: A Dataset for Analyzing Mental Health Stigma in Public YouTube Conversations},
+  year = {2025},
+  url = {https://silentstigma.org},
+  note = {Unsupervised NLP research platform for analyzing mental health stigma through large-scale language pattern analysis of public YouTube comments}
+}</pre>
+            </div>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button onclick="copyBibtex()" style="background: #059669; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 500; transition: background 0.2s;">Copy BibTeX</button>
+                <button onclick="copyPlainCitation()" style="background: #f1f5f9; color: #0a0a0a; border: 1px solid #e2e8f0; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 500; transition: background 0.2s;">Copy Plain Text</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
 

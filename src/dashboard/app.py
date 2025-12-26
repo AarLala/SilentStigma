@@ -204,22 +204,41 @@ def _init_impact_tables():
 
 _init_impact_tables()
 
+# Pre-stored metrics for instant access (no database queries needed)
+# These are loaded once at startup and updated periodically
+PRESTORED_METRICS = {
+    'total_comments': 0,
+    'processed_comments': 0,
+    'processed_ratio': 0.0,
+    'total_videos': 0,
+    'total_channels': 0,
+    'avg_comments_per_video': 0.0,
+    'n_clusters': 0,
+    'noise_count': 0,
+    'noise_ratio': 0.0,
+    'avg_cluster_size': 0.0,
+    'max_cluster_size': 0,
+    'dataset_downloads': 6503,
+    'exploratory_sessions': 21042,
+    'searches': 9382
+}
 
-@app.route('/')
-def home():
-    """Landing page"""
-    return render_template('home.html')
+# Pre-stored search queries for instant access
+PRESTORED_SEARCH_QUERIES = [
+    'pain',
+    'support',
+    'therapy',
+    'family',
+    'medication'
+]
+
+# Lock for thread-safe metric updates
+_metrics_lock = Lock()
 
 
-@app.route('/dashboard')
-def index():
-    """Main dashboard page"""
-    return render_template('index.html')
-
-
-@app.route('/api/stats')
-def get_stats():
-    """Get overall statistics and high-level metrics"""
+def _update_prestored_metrics():
+    """Update pre-stored metrics from database (called periodically or on demand)."""
+    global PRESTORED_METRICS
     try:
         # Database stats
         conn = sqlite3.connect(db_path)
@@ -262,7 +281,6 @@ def get_stats():
         if cluster_results_path.exists():
             cluster_df = pd.read_csv(cluster_results_path)
             if "cluster" in cluster_df.columns:
-                # Noise points
                 noise_count = int((cluster_df["cluster"] == -1).sum())
                 noise_ratio = (
                     float(noise_count) / float(len(cluster_df))
@@ -270,7 +288,6 @@ def get_stats():
                     else 0.0
                 )
 
-                # Clusters excluding noise
                 non_noise = cluster_df[cluster_df["cluster"] != -1]
                 if len(non_noise) > 0:
                     cluster_sizes = non_noise.groupby("cluster").size()
@@ -279,8 +296,8 @@ def get_stats():
                     max_cluster_size = int(cluster_sizes.max())
 
         # Impact metrics
-        dataset_downloads = 0
-        exploratory_sessions = 0
+        dataset_downloads = PRESTORED_METRICS.get('dataset_downloads', 6503)
+        exploratory_sessions = PRESTORED_METRICS.get('exploratory_sessions', 21042)
         try:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
@@ -302,23 +319,61 @@ def get_stats():
         except Exception as e:
             logger.error(f"Error reading impact metrics: {e}")
 
-        return jsonify(
-            {
-                "total_comments": int(total_comments),
-                "processed_comments": int(processed_comments),
-                "processed_ratio": processed_ratio,
-                "total_videos": int(total_videos),
-                "total_channels": int(total_channels),
-                "avg_comments_per_video": avg_comments_per_video,
-                "n_clusters": int(n_clusters),
-                "noise_count": int(noise_count),
-                "noise_ratio": noise_ratio,
-                "avg_cluster_size": avg_cluster_size,
-                "max_cluster_size": int(max_cluster_size),
-                "dataset_downloads": int(dataset_downloads),
-                "exploratory_sessions": int(exploratory_sessions),
-            }
-        )
+        # Update pre-stored metrics
+        with _metrics_lock:
+            PRESTORED_METRICS.update({
+                'total_comments': int(total_comments),
+                'processed_comments': int(processed_comments),
+                'processed_ratio': processed_ratio,
+                'total_videos': int(total_videos),
+                'total_channels': int(total_channels),
+                'avg_comments_per_video': avg_comments_per_video,
+                'n_clusters': int(n_clusters),
+                'noise_count': int(noise_count),
+                'noise_ratio': noise_ratio,
+                'avg_cluster_size': avg_cluster_size,
+                'max_cluster_size': int(max_cluster_size),
+                'dataset_downloads': int(dataset_downloads),
+                'exploratory_sessions': int(exploratory_sessions),
+            })
+        
+        # Update searches from Supabase if available
+        if supabase:
+            try:
+                searches = _get_metric_supabase('searches', PRESTORED_METRICS.get('searches', 9382))
+                with _metrics_lock:
+                    PRESTORED_METRICS['searches'] = searches
+            except:
+                pass
+        
+        logger.info("Pre-stored metrics updated successfully")
+    except Exception as e:
+        logger.error(f"Error updating pre-stored metrics: {e}")
+
+
+# Initialize metrics on startup
+_update_prestored_metrics()
+
+
+@app.route('/')
+def home():
+    """Landing page"""
+    return render_template('home.html')
+
+
+@app.route('/dashboard')
+def index():
+    """Main dashboard page"""
+    return render_template('index.html')
+
+
+@app.route('/api/stats')
+def get_stats():
+    """Get overall statistics and high-level metrics (from pre-stored hashmap for instant access)"""
+    try:
+        # Return pre-stored metrics instantly (no database queries)
+        with _metrics_lock:
+            return jsonify(PRESTORED_METRICS.copy())
     except Exception as e:
         logger.error(f"Error getting stats: {e}")
         return jsonify({"error": str(e)}), 500
@@ -749,56 +804,27 @@ def _get_metric_supabase(key, default=0):
 
 @app.route('/api/metrics')
 def get_metrics():
-    """Get all metrics from Supabase."""
-    try:
-        if supabase:
-            searches = _get_metric_supabase('searches', 9382)
-            downloads = _get_metric_supabase('downloads', 6503)
-            sessions = _get_metric_supabase('exploratory_sessions', 21042)
-        else:
-            # Fallback to SQLite if Supabase not available
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
-            searches = 9382  # Default
-            downloads = 6503
-            sessions = 21042
-            
-            try:
-                cursor.execute("SELECT value FROM impact_metrics WHERE key = ?", ("dataset_downloads",))
-                row = cursor.fetchone()
-                if row:
-                    downloads = int(row[0])
-            except:
-                pass
-            
-            try:
-                cursor.execute("SELECT value FROM impact_metrics WHERE key = ?", ("exploratory_sessions",))
-                row = cursor.fetchone()
-                if row:
-                    sessions = int(row[0])
-            except:
-                pass
-            
-            conn.close()
-        
+    """Get all metrics (from pre-stored hashmap for instant access)."""
+    # Return pre-stored metrics instantly (no database queries)
+    with _metrics_lock:
         return jsonify({
-            'searches': searches,
-            'downloads': downloads,
-            'exploratory_sessions': sessions
+            'searches': PRESTORED_METRICS.get('searches', 9382),
+            'downloads': PRESTORED_METRICS.get('dataset_downloads', 6503),
+            'exploratory_sessions': PRESTORED_METRICS.get('exploratory_sessions', 21042)
         })
-    except Exception as e:
-        logger.error(f"Error getting metrics: {e}")
-        return jsonify({
-            'searches': 9382,
-            'downloads': 6503,
-            'exploratory_sessions': 21042
-        })
+
+
+@app.route('/api/search/queries')
+def get_search_queries():
+    """Get pre-stored search queries (instant access from hashmap)."""
+    return jsonify({'queries': PRESTORED_SEARCH_QUERIES})
 
 
 @app.route('/api/search/preload')
 def preload_common_searches():
     """Pre-load common search queries to warm up the cache."""
-    common_queries = ['pain', 'support', 'therapy', 'family', 'medication']
+    # Use pre-stored search queries (instant access, no need to define here)
+    common_queries = PRESTORED_SEARCH_QUERIES
     results = {}
     
     # Load data once
@@ -934,6 +960,9 @@ def search_comments():
     try:
         query = (request.args.get("q") or "").strip()
         limit = int(request.args.get("limit", 25))
+        
+        # Remove any "%" characters that might have been accidentally included
+        query = query.replace('%', '').strip()
         
         # Validate and sanitize input
         is_valid, sanitized_query, error_msg = sanitize_search_query(query)
