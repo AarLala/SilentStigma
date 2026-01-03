@@ -14,7 +14,7 @@ umap-learn>=0.5.4
 nltk>=3.8.1
 # spacy>=3.6.0  # Optional - not currently used in codebase. Install separately if needed.
 keybert>=0.7.0
-langdetect>=1.0.9
+langdetect==1.0.9
 
 # Data Collection
 google-api-python-client>=2.100.0
