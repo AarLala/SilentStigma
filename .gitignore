@@ -36,6 +36,8 @@ ENV/
 # Environment variables
 .env
 .env.local
+.env.*
+!.env.example
 
 # Data files
 # Note: data/ and outputs/ are tracked, but exclude large embedding files

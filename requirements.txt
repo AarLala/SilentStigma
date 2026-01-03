@@ -40,3 +40,6 @@ sqlalchemy>=2.0.20
 # Supabase
 supabase>=2.0.0
 
+# Production server
+gunicorn>=21.2.0
+

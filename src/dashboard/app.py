@@ -53,16 +53,22 @@ output_dir = BASE_DIR / "outputs"
 # Initialize Supabase client
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+USE_SUPABASE = os.getenv('USE_SUPABASE', 'false').lower() == 'true'
 supabase: Client = None
 
 if SUPABASE_URL and SUPABASE_KEY:
     try:
         supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
         logger.info("Supabase client initialized successfully")
+        if USE_SUPABASE:
+            logger.info("Using Supabase for data queries (faster than SQLite)")
     except Exception as e:
         logger.warning(f"Failed to initialize Supabase client: {e}. Metrics tracking will be disabled.")
 else:
     logger.warning("Supabase credentials not found. Metrics tracking will be disabled.")
+    if USE_SUPABASE:
+        logger.warning("USE_SUPABASE is enabled but Supabase credentials are missing. Falling back to SQLite.")
+        USE_SUPABASE = False
 
 
 def get_client_id():
@@ -236,11 +242,37 @@ PRESTORED_SEARCH_QUERIES = [
 _metrics_lock = Lock()
 
 
-def _update_prestored_metrics():
-    """Update pre-stored metrics from database (called periodically or on demand)."""
-    global PRESTORED_METRICS
+def _get_stats_from_supabase():
+    """Get statistics from Supabase."""
     try:
-        # Database stats
+        # Get total comments
+        result = supabase.table('comments').select('id', count='exact').limit(1).execute()
+        total_comments = result.count if hasattr(result, 'count') else 0
+        
+        # Get processed comments
+        result = supabase.table('comments').select('id', count='exact').eq('processed', True).limit(1).execute()
+        processed_comments = result.count if hasattr(result, 'count') else 0
+        
+        # Get distinct video count
+        result = supabase.table('videos').select('video_id', count='exact').limit(1).execute()
+        total_videos = result.count if hasattr(result, 'count') else 0
+        
+        # Get distinct channel count
+        result = supabase.table('videos').select('channel_id').execute()
+        if result.data:
+            total_channels = len(set(row['channel_id'] for row in result.data if row['channel_id']))
+        else:
+            total_channels = 0
+        
+        return total_comments, processed_comments, total_videos, total_channels
+    except Exception as e:
+        logger.error(f"Error getting stats from Supabase: {e}")
+        return 0, 0, 0, 0
+
+
+def _get_stats_from_sqlite():
+    """Get statistics from SQLite."""
+    try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
@@ -257,6 +289,21 @@ def _update_prestored_metrics():
         total_channels = cursor.fetchone()[0]
 
         conn.close()
+        return total_comments, processed_comments, total_videos, total_channels
+    except Exception as e:
+        logger.error(f"Error getting stats from SQLite: {e}")
+        return 0, 0, 0, 0
+
+
+def _update_prestored_metrics():
+    """Update pre-stored metrics from database (called periodically or on demand)."""
+    global PRESTORED_METRICS
+    try:
+        # Database stats - use Supabase if enabled, otherwise SQLite
+        if USE_SUPABASE and supabase:
+            total_comments, processed_comments, total_videos, total_channels = _get_stats_from_supabase()
+        else:
+            total_comments, processed_comments, total_videos, total_channels = _get_stats_from_sqlite()
 
         processed_ratio = (
             float(processed_comments) / float(total_comments)
@@ -1079,7 +1126,7 @@ def search_comments():
 if __name__ == "__main__":
     import os
 
-    port = int(os.environ.get("PORT", 10000))
+    port = int(os.environ.get("PORT", 8080))
     print(f"[BOOT] Binding to 0.0.0.0:{port}", flush=True)
 
     app.run(

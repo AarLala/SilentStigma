@@ -1,0 +1,29 @@
+# fly.toml app configuration file generated for silencevoice on 2025-01-27T00:00:00Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "silencevoice"
+primary_region = "iad"
+
+# Note: App name will be set when you run 'fly launch'
+# Change 'silencevoice' to your actual app name after deployment
+
+[build]
+
+[env]
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 2048
+
