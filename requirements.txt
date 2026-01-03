@@ -43,3 +43,6 @@ supabase>=2.0.0
 # Production server
 gunicorn>=21.2.0
 
+# Performance optimization
+psycopg2-binary>=2.9.9
+

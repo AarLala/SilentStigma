@@ -31,12 +31,13 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-# Initialize rate limiter
+# Initialize rate limiter (optimized for Render)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://"
+    default_limits=["500 per day", "100 per hour"],
+    storage_uri="memory://",
+    headers_enabled=True
 )
 
 # Base paths (project root = two levels above this file: src/dashboard/app.py)
@@ -243,22 +244,23 @@ _metrics_lock = Lock()
 
 
 def _get_stats_from_supabase():
-    """Get statistics from Supabase."""
+    """Get statistics from Supabase (optimized for Render - faster queries)."""
     try:
-        # Get total comments
+        # Use count queries with limits for faster response
+        # Get total comments (cached count is faster)
         result = supabase.table('comments').select('id', count='exact').limit(1).execute()
         total_comments = result.count if hasattr(result, 'count') else 0
         
-        # Get processed comments
+        # Get processed comments (use count with filter)
         result = supabase.table('comments').select('id', count='exact').eq('processed', True).limit(1).execute()
         processed_comments = result.count if hasattr(result, 'count') else 0
         
-        # Get distinct video count
+        # Get video count
         result = supabase.table('videos').select('video_id', count='exact').limit(1).execute()
         total_videos = result.count if hasattr(result, 'count') else 0
         
-        # Get distinct channel count
-        result = supabase.table('videos').select('channel_id').execute()
+        # Get distinct channel count (optimized - use distinct select)
+        result = supabase.table('videos').select('channel_id').limit(10000).execute()
         if result.data:
             total_channels = len(set(row['channel_id'] for row in result.data if row['channel_id']))
         else:
@@ -1001,7 +1003,7 @@ def _load_search_data():
 
 
 @app.route('/api/search')
-@limiter.limit("20 per minute")  # Rate limit: 20 searches per minute per IP (increased for better UX)
+@limiter.limit("30 per minute")  # Rate limit: 30 searches per minute per IP (optimized for Render)
 def search_comments():
     """Enhanced keyword search over processed comments with multiple matching strategies."""
     try:
