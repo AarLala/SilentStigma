@@ -1107,79 +1107,41 @@ def search_comments():
         if df is None:
             return jsonify({"error": "Search data not available"}), 503
 
-        # Try multiple search strategies for better results
-        results = pd.DataFrame()  # Initialize as empty DataFrame
-        
-        # Strategy 1: Exact word match (highest priority)
-        # Use word boundaries to match whole words
+        # Hyper-optimized search strategy for Render (ultra-fast)
         escaped_query = re.escape(query)
+        
+        # Use pre-computed lowercase column if available (much faster)
+        text_column = df["text_lower"] if "text_lower" in df.columns else df["text"].astype(str).str.lower()
+        
+        # Strategy 1: Word boundary match (most relevant) - vectorized for speed
         word_boundary_pattern = r'\b' + escaped_query + r'\b'
-        mask1 = df["text"].astype(str).str.contains(word_boundary_pattern, case=False, na=False, regex=True)
-        exact_matches = df[mask1].copy()
+        mask = text_column.str.contains(word_boundary_pattern, case=False, na=False, regex=True)
+        matches = df[mask].copy()
         
-        if len(exact_matches) > 0:
-            # Sort by relevance (like_count if available, or just take first N)
-            if "like_count" in exact_matches.columns:
-                exact_matches = exact_matches.sort_values("like_count", ascending=False)
-            results = exact_matches.head(limit).copy()
-        
-        # Strategy 2: If not enough results, try partial word match
-        if len(results) < limit:
-            # Remove word boundary requirement for partial matches
-            partial_pattern = escaped_query
-            mask2 = df["text"].astype(str).str.contains(partial_pattern, case=False, na=False, regex=True)
-            partial_matches = df[mask2].copy()
+        # Strategy 2: If not enough, try partial match (faster than before)
+        if len(matches) < limit:
+            partial_mask = text_column.str.contains(escaped_query, case=False, na=False, regex=True)
+            partial_matches = df[partial_mask].copy()
             
-            # Exclude results we already have
-            if len(results) > 0 and "id" in partial_matches.columns and "id" in results.columns:
-                existing_ids = set(results["id"].astype(str))
+            # Fast exclusion using pandas
+            if len(matches) > 0 and "id" in partial_matches.columns and "id" in matches.columns:
+                existing_ids = set(matches["id"].astype(str))
                 partial_matches = partial_matches[~partial_matches["id"].astype(str).isin(existing_ids)]
             
+            # Combine efficiently
             if len(partial_matches) > 0:
-                if "like_count" in partial_matches.columns:
-                    partial_matches = partial_matches.sort_values("like_count", ascending=False)
-                # Add remaining results up to limit
-                needed = limit - len(results)
-                additional = partial_matches.head(needed)
-                if len(results) > 0:
-                    results = pd.concat([results, additional], ignore_index=True)
-                else:
-                    results = additional
+                matches = pd.concat([matches, partial_matches], ignore_index=True)
         
-        # Strategy 3: If still not enough, try fuzzy matching with common variations
-        if len(results) < limit and len(query) > 3:
-            # Try plural/singular variations
-            query_variations = [query]
-            if query.endswith('s'):
-                query_variations.append(query[:-1])  # Remove 's' for singular
-            elif not query.endswith('s'):
-                query_variations.append(query + 's')  # Add 's' for plural
-            
-            # Try each variation
-            for variation in query_variations:
-                if len(results) >= limit:
-                    break
-                escaped_var = re.escape(variation)
-                mask3 = df["text"].astype(str).str.contains(escaped_var, case=False, na=False, regex=True)
-                var_matches = df[mask3].copy()
-                
-                # Exclude existing results
-                if len(results) > 0 and "id" in var_matches.columns and "id" in results.columns:
-                    existing_ids = set(results["id"].astype(str))
-                    var_matches = var_matches[~var_matches["id"].astype(str).isin(existing_ids)]
-                
-                if len(var_matches) > 0:
-                    if "like_count" in var_matches.columns:
-                        var_matches = var_matches.sort_values("like_count", ascending=False)
-                    needed = limit - len(results)
-                    additional = var_matches.head(needed)
-                    if len(results) > 0:
-                        results = pd.concat([results, additional], ignore_index=True)
-                    else:
-                        results = additional
-        
-        # Limit final results
-        results = results.head(limit) if len(results) > 0 else pd.DataFrame()
+        # Sort by relevance and limit (optimized)
+        if len(matches) > 0:
+            # Sort only if we have like_count column
+            if "like_count" in matches.columns:
+                matches = matches.nlargest(limit, "like_count", keep='first')
+            else:
+                matches = matches.head(limit)
+            results = matches.copy()
+        else:
+            results = pd.DataFrame()
         
         # Select columns
         cols = [c for c in ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"] if c in results.columns]
