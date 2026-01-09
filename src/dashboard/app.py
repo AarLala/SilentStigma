@@ -19,7 +19,6 @@ import json
 import yaml
 from supabase import create_client, Client
 from dotenv import load_dotenv
-from functools import lru_cache
 from threading import Lock
 
 # Load environment variables from .env file
