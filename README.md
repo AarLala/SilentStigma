@@ -1,8 +1,8 @@
-# SilenceVoice
+# SilenceVoice Dashboard
 
-**Unsupervised NLP Research Platform for Mental Health Stigma Analysis**
+**Web Dashboard for Mental Health Stigma Analysis**
 
-SilenceVoice analyzes mental health stigma through large-scale language pattern analysis of public YouTube comments.
+Interactive web interface for exploring mental health stigma patterns from YouTube comments.
 
 ## Quick Start
 
@@ -10,7 +10,6 @@ SilenceVoice analyzes mental health stigma through large-scale language pattern 
 
 ```bash
 pip install -r requirements.txt
-python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
 ```
 
 ### 2. Configure Environment
