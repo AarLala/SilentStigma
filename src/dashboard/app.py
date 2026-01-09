@@ -137,10 +137,12 @@ def sanitize_search_query(query):
     return True, sanitized, None
 
 
-# Search result cache with thread-safe access
+# Search result cache with thread-safe access (hyper-optimized for Render)
 _search_cache = {}
 _cache_lock = Lock()
-_cache_max_size = 100  # Maximum number of cached queries
+_cache_max_size = 500  # Increased cache size for better performance
+_preload_complete = False
+_preload_lock = Lock()
 
 
 def _get_cached_search(query, limit):
@@ -153,14 +155,17 @@ def _get_cached_search(query, limit):
 
 
 def _set_cached_search(query, limit, results):
-    """Cache search results."""
+    """Cache search results (optimized for Render)."""
     cache_key = f"{query.lower()}_{limit}"
     with _cache_lock:
         # Simple LRU: remove oldest if cache is full
         if len(_search_cache) >= _cache_max_size:
-            # Remove first (oldest) item
-            oldest_key = next(iter(_search_cache))
-            del _search_cache[oldest_key]
+            # Remove 10% of oldest items for better performance
+            items_to_remove = max(1, _cache_max_size // 10)
+            for _ in range(items_to_remove):
+                if _search_cache:
+                    oldest_key = next(iter(_search_cache))
+                    del _search_cache[oldest_key]
         _search_cache[cache_key] = results
 
 
@@ -230,13 +235,11 @@ PRESTORED_METRICS = {
     'searches': 9382
 }
 
-# Pre-stored search queries for instant access
+# Pre-stored search queries for instant access (expanded for better UX)
 PRESTORED_SEARCH_QUERIES = [
-    'pain',
-    'support',
-    'therapy',
-    'family',
-    'medication'
+    'pain', 'support', 'therapy', 'family', 'medication',
+    'anxiety', 'depression', 'help', 'struggling', 'coping',
+    'mental health', 'feeling', 'alone', 'better', 'hope'
 ]
 
 # Lock for thread-safe metric updates
@@ -402,6 +405,52 @@ def _update_prestored_metrics():
 
 # Initialize metrics on startup
 _update_prestored_metrics()
+
+# Pre-load search data and common queries on startup (background)
+def _startup_preload():
+    """Pre-load search data and common queries in background for faster first requests."""
+    import threading
+    def preload():
+        try:
+            logger.info("Starting background pre-load of search data...")
+            # Load search data
+            _load_search_data()
+            # Pre-load common searches
+            df, _ = _load_search_data()
+            if df is not None:
+                # Pre-load common queries
+                for query in PRESTORED_SEARCH_QUERIES[:10]:  # Pre-load first 10
+                    try:
+                        is_valid, sanitized_query, _ = sanitize_search_query(query)
+                        if is_valid:
+                            escaped_query = re.escape(sanitized_query)
+                            word_boundary_pattern = r'\b' + escaped_query + r'\b'
+                            text_col = df["text_lower"] if "text_lower" in df.columns else df["text"].astype(str).str.lower()
+                            mask = text_col.str.contains(word_boundary_pattern, case=False, na=False, regex=True)
+                            matches = df[mask].head(25)
+                            if "like_count" in matches.columns:
+                                matches = matches.nlargest(25, "like_count", keep='first')
+                            cols = [c for c in ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"] if c in matches.columns]
+                            results = matches[cols].to_dict("records") if len(matches) > 0 else []
+                            _set_cached_search(sanitized_query, 25, results)
+                    except:
+                        pass
+                logger.info("Background pre-load complete!")
+        except Exception as e:
+            logger.warning(f"Background pre-load error: {e}")
+    
+    # Start pre-load in background thread
+    preload_thread = threading.Thread(target=preload, daemon=True)
+    preload_thread.start()
+
+# Start background pre-load
+_startup_preload()
+
+# Health check endpoint for Render
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Render."""
+    return jsonify({"status": "healthy", "cache_size": len(_search_cache), "data_loaded": _data_loaded}), 200
 
 
 @app.route('/')
@@ -871,8 +920,14 @@ def get_search_queries():
 
 @app.route('/api/search/preload')
 def preload_common_searches():
-    """Pre-load common search queries to warm up the cache."""
-    # Use pre-stored search queries (instant access, no need to define here)
+    """Pre-load common search queries to warm up the cache (hyper-optimized)."""
+    global _preload_complete
+    
+    with _preload_lock:
+        if _preload_complete:
+            return jsonify({"status": "already_preloaded", "preloaded": PRESTORED_SEARCH_QUERIES})
+    
+    # Use pre-stored search queries
     common_queries = PRESTORED_SEARCH_QUERIES
     results = {}
     
@@ -882,24 +937,34 @@ def preload_common_searches():
         logger.error("Search data not available for preloading")
         return jsonify({"error": "Search data not available", "preloaded": []}), 503
     
+    # Pre-load all queries in batch for better performance
     for query in common_queries:
         try:
             is_valid, sanitized_query, _ = sanitize_search_query(query)
             if not is_valid:
-                logger.warning(f"Query '{query}' failed validation")
                 continue
             
             # Check cache first
             cached = _get_cached_search(sanitized_query, 25)
             if cached is not None:
                 results[query] = cached
-                logger.debug(f"Using cached results for '{query}'")
                 continue
             
-            # Perform search
+            # Perform optimized search
             escaped_query = re.escape(sanitized_query)
-            mask = df["text"].astype(str).str.contains(escaped_query, case=False, na=False, regex=True)
+            word_boundary_pattern = r'\b' + escaped_query + r'\b'
+            
+            # Use pre-computed lowercase column if available
+            if "text_lower" in df.columns:
+                mask = df["text_lower"].str.contains(word_boundary_pattern, case=False, na=False, regex=True)
+            else:
+                mask = df["text"].astype(str).str.contains(word_boundary_pattern, case=False, na=False, regex=True)
+            
             df_filtered = df[mask].head(25).copy()
+            
+            # Sort by like_count if available
+            if "like_count" in df_filtered.columns:
+                df_filtered = df_filtered.nlargest(25, "like_count", keep='first')
             
             cols = [c for c in ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"] if c in df_filtered.columns]
             query_results = df_filtered[cols].to_dict("records")
@@ -907,11 +972,13 @@ def preload_common_searches():
             # Cache results
             _set_cached_search(sanitized_query, 25, query_results)
             results[query] = query_results
-            logger.info(f"Pre-loaded {len(query_results)} results for '{query}'")
             
         except Exception as e:
-            logger.warning(f"Error preloading query '{query}': {e}", exc_info=True)
+            logger.warning(f"Error preloading query '{query}': {e}")
             continue
+    
+    with _preload_lock:
+        _preload_complete = True
     
     logger.info(f"Pre-loading complete. Successfully pre-loaded {len(results)} queries.")
     return jsonify({"status": "success", "preloaded": list(results.keys())})
@@ -960,7 +1027,7 @@ _data_loaded = False
 
 
 def _load_search_data():
-    """Load search data into memory (thread-safe, loads once)."""
+    """Load search data into memory (hyper-optimized for Render - thread-safe, loads once)."""
     global _processed_df, _cluster_df, _data_loaded
     
     if _data_loaded:
@@ -977,16 +1044,26 @@ def _load_search_data():
                 logger.error("Processed comments file not found")
                 return None, None
             
-            _processed_df = pd.read_csv(processed_path)
+            # Optimized CSV reading with dtype specification for faster loading
+            logger.info("Loading search data into memory (this may take a moment)...")
+            _processed_df = pd.read_csv(
+                processed_path,
+                dtype={'id': str, 'text': str, 'like_count': 'Int64'},
+                low_memory=False
+            )
+            
             if "text" not in _processed_df.columns:
                 logger.error("No text column in processed data")
                 return None, None
+            
+            # Convert text to lowercase once for faster searches (pre-compute)
+            _processed_df["text_lower"] = _processed_df["text"].astype(str).str.lower()
             
             # Load cluster data if available
             cluster_path = output_dir / "cluster_results.csv"
             if cluster_path.exists() and "id" in _processed_df.columns:
                 try:
-                    _cluster_df = pd.read_csv(cluster_path)[["id", "cluster"]]
+                    _cluster_df = pd.read_csv(cluster_path, dtype={'id': str})[["id", "cluster"]]
                     # Pre-merge cluster data for faster searches
                     _processed_df = _processed_df.merge(_cluster_df, on="id", how="left")
                 except Exception as e:
@@ -994,7 +1071,7 @@ def _load_search_data():
                     _cluster_df = None
             
             _data_loaded = True
-            logger.info("Search data loaded into memory")
+            logger.info(f"Search data loaded into memory: {len(_processed_df):,} comments ready")
             return _processed_df, _cluster_df
             
         except Exception as e:
@@ -1003,7 +1080,7 @@ def _load_search_data():
 
 
 @app.route('/api/search')
-@limiter.limit("30 per minute")  # Rate limit: 30 searches per minute per IP (optimized for Render)
+@limiter.limit("50 per minute")  # Rate limit: 50 searches per minute per IP (hyper-optimized for Render)
 def search_comments():
     """Enhanced keyword search over processed comments with multiple matching strategies."""
     try:
@@ -1115,7 +1192,10 @@ def search_comments():
         _set_cached_search(query, limit, results_dict)
         
         logger.info(f"Search for '{query}' returned {len(results_dict)} results")
-        return jsonify({"results": results_dict})
+        response = jsonify({"results": results_dict})
+        # Add cache headers for better performance
+        response.headers['Cache-Control'] = 'public, max-age=300'  # Cache for 5 minutes
+        return response
         
     except ValueError as e:
         logger.error(f"Invalid input in search_comments: {e}")
