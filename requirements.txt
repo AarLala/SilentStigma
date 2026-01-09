@@ -1,35 +1,15 @@
-# Web Framework (Production - Dashboard)
+# Web Framework (Production Dashboard)
 flask>=3.0.0
 flask-cors>=4.0.0
 flask-limiter>=3.5.0
 gunicorn>=21.2.0
 
-# Data Processing
+# Data Processing (for reading CSV files)
 pandas>=2.0.0
-numpy>=1.24.0
-
-# NLP & ML (for data processing pipeline)
-sentence-transformers>=2.2.0
-transformers>=4.30.0
-torch>=2.0.0
-scikit-learn>=1.3.0
-hdbscan>=0.8.33
-umap-learn>=0.5.4
-nltk>=3.8.1
-keybert>=0.7.0
-langdetect>=1.0.9
-plotly>=5.17.0
-
-# Data Collection (optional - for collecting new data)
-google-api-python-client>=2.100.0
-google-auth-httplib2>=0.1.1
-google-auth-oauthlib>=1.1.0
-
-# Utilities
-python-dotenv>=1.0.0
-pyyaml>=6.0.1
-tqdm>=4.66.0
 
 # Database
 supabase>=2.0.0
 
+# Utilities
+python-dotenv>=1.0.0
+pyyaml>=6.0.1

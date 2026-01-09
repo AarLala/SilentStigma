@@ -44,23 +44,14 @@ See `render.yaml` for configuration.
 
 - **Web**: Flask, Gunicorn
 - **Database**: Supabase (PostgreSQL)
-- **NLP**: sentence-transformers, KeyBERT
-- **ML**: HDBSCAN, UMAP, scikit-learn
-- **Visualization**: Plotly
+- **Data**: Pandas (CSV processing)
 
 ## Project Structure
 
 ```
 src/
   dashboard/     # Web dashboard (production)
-  pipeline.py    # Data processing pipeline
-  data_collector.py
-  text_processor.py
-  semantic_encoder.py
-  clustering.py
-  visualization.py
-  pattern_extraction.py
-outputs/         # Processed data files
+outputs/         # Processed data files (CSV, JSON)
 config.yaml      # Configuration
 ```
 
