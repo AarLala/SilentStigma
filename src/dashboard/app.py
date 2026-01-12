@@ -9,7 +9,7 @@ import os
 import hashlib
 import re
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import Flask, render_template, jsonify, send_file, request
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -795,7 +795,7 @@ def impact_dataset_download():
             conn.close()
             return jsonify({"status": "already-counted"})
 
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         cursor.execute(
             "INSERT INTO impact_events (metric_key, client_id, ts) VALUES (?, ?, ?)",
             ("dataset_downloads", client_id, now),
@@ -837,12 +837,15 @@ def impact_usage_ping():
         row = cursor.fetchone()
 
         should_increment = False
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if not row:
             should_increment = True
         else:
             try:
                 last_ts = datetime.fromisoformat(row[0])
+                # Ensure both datetimes are timezone-aware for comparison
+                if last_ts.tzinfo is None:
+                    last_ts = last_ts.replace(tzinfo=timezone.utc)
                 if now - last_ts >= timedelta(hours=1):
                     should_increment = True
             except Exception:
@@ -893,11 +896,11 @@ def _track_download_supabase(client_id):
         if result.data and len(result.data) > 0:
             return False  # Already downloaded
         
-        # Record the download
+        # Record the download (use timezone-aware datetime)
         try:
             supabase.table('download_events').insert({
                 'client_id': client_id,
-                'timestamp': datetime.utcnow().isoformat()
+                'timestamp': datetime.now(timezone.utc).isoformat()
             }).execute()
         except Exception as insert_error:
             # If insert fails due to unique constraint, client already downloaded
@@ -931,14 +934,18 @@ def _track_session_supabase(client_id):
             should_increment = True
         else:
             last_timestamp = datetime.fromisoformat(result.data[0]['timestamp'])
-            if datetime.utcnow() - last_timestamp >= timedelta(hours=1):
+            # Ensure both datetimes are timezone-aware for comparison
+            if last_timestamp.tzinfo is None:
+                last_timestamp = last_timestamp.replace(tzinfo=timezone.utc)
+            now = datetime.now(timezone.utc)
+            if now - last_timestamp >= timedelta(hours=1):
                 should_increment = True
         
         if should_increment:
-            # Record the session
+            # Record the session (use timezone-aware datetime)
             supabase.table('session_events').insert({
                 'client_id': client_id,
-                'timestamp': datetime.utcnow().isoformat()
+                'timestamp': datetime.now(timezone.utc).isoformat()
             }).execute()
             
             # Increment session count
