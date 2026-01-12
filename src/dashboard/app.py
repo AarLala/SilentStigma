@@ -485,12 +485,17 @@ def index():
 
 
 @app.route('/api/stats')
+@limiter.limit("60 per minute")  # Rate limit stats endpoint
 def get_stats():
-    """Get overall statistics and high-level metrics (from pre-stored hashmap for instant access)"""
+    """Get overall statistics and high-level metrics (hyper-optimized for Render - cached)"""
     try:
         # Return pre-stored metrics instantly (no database queries)
         with _metrics_lock:
-            return jsonify(PRESTORED_METRICS.copy())
+            response = jsonify(PRESTORED_METRICS.copy())
+            # Add cache headers for Render (longer cache for stats)
+            response.headers['Cache-Control'] = 'public, max-age=600'  # Cache for 10 minutes
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+            return response
     except Exception as e:
         logger.error(f"Error getting stats: {e}")
         return jsonify({"error": str(e)}), 500
