@@ -1231,12 +1231,17 @@ def search_comments():
         return jsonify({"error": "An error occurred while searching. Please try again."}), 500
 
 
-if __name__ == "__main__":
-    import os
+# Gunicorn compatibility - ensure app is properly initialized
+# This is the WSGI application that Gunicorn will use
+application = app
 
+if __name__ == "__main__":
+    # Only run Flask dev server if not using Gunicorn
+    import os
     port = int(os.environ.get("PORT", 8080))
     print(f"[BOOT] Binding to 0.0.0.0:{port}", flush=True)
-
+    print("[INFO] Running Flask dev server. For production, use: gunicorn src.dashboard.app:application", flush=True)
+    
     app.run(
         host="0.0.0.0",
         port=port,
