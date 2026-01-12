@@ -102,6 +102,9 @@ def sanitize_search_query(query):
     if not query:
         return False, "", "Query cannot be empty"
     
+    # Convert to string if not already
+    query = str(query)
+    
     # Remove any null bytes
     query = query.replace('\x00', '')
     
@@ -109,7 +112,7 @@ def sanitize_search_query(query):
     if len(query) > 200:
         return False, "", "Query is too long (maximum 200 characters)"
     
-    # Check for suspicious patterns
+    # Check for suspicious patterns (case-insensitive)
     suspicious_patterns = [
         r'<script',  # XSS attempts
         r'javascript:',  # JavaScript injection
@@ -118,7 +121,6 @@ def sanitize_search_query(query):
         r'vbscript:',  # VBScript injection
         r'expression\s*\(',  # CSS expression
         r'@import',  # CSS import
-        r'url\s*\(',  # CSS url()
         r'SELECT\s+.*\s+FROM',  # SQL injection patterns
         r'UNION\s+SELECT',  # SQL injection
         r'DROP\s+TABLE',  # SQL injection
@@ -127,24 +129,30 @@ def sanitize_search_query(query):
         r'UPDATE\s+.*\s+SET',  # SQL injection
         r'EXEC\s*\(',  # Command execution
         r'EXECUTE\s*\(',  # Command execution
-        r'\.\.\/',  # Path traversal
-        r'\.\.\\',  # Path traversal (Windows)
     ]
     
     query_lower = query.lower()
     for pattern in suspicious_patterns:
-        if re.search(pattern, query_lower, re.IGNORECASE):
-            return False, "", "Query contains invalid characters or patterns"
+        try:
+            if re.search(pattern, query_lower, re.IGNORECASE):
+                return False, "", "Query contains invalid characters or patterns"
+        except re.error:
+            # Skip invalid regex patterns
+            continue
     
-    # Allow only alphanumeric, spaces, and common punctuation
-    # Remove any control characters
-    sanitized = ''.join(char for char in query if ord(char) >= 32 or char in '\n\r\t')
+    # Allow alphanumeric, spaces, common punctuation, and unicode characters
+    # Remove control characters but keep printable characters
+    sanitized = ''.join(char for char in query if char.isprintable() or char in '\n\r\t')
     
     # Trim whitespace
     sanitized = sanitized.strip()
     
     if not sanitized:
         return False, "", "Query cannot be empty after sanitization"
+    
+    # Additional check: ensure query has at least one alphanumeric character
+    if not any(c.isalnum() for c in sanitized):
+        return False, "", "Query must contain at least one letter or number"
     
     return True, sanitized, None
 
@@ -1144,12 +1152,29 @@ def _load_search_data():
 
 
 @app.route('/api/search')
-@limiter.limit("30 per minute", per_method=True, methods=["GET"])  # Strict rate limit for search
+@limiter.limit("30 per minute")  # Strict rate limit for search
 def search_comments():
     """Enhanced keyword search over processed comments with multiple matching strategies."""
     try:
+        # Get and validate query parameter
         query = (request.args.get("q") or "").strip()
-        limit = int(request.args.get("limit", 25))
+        if not query:
+            return jsonify({"error": "Query parameter 'q' is required", "results": []}), 400
+        
+        # Validate limit parameter
+        try:
+            limit = int(request.args.get("limit", 25))
+            if limit < 1 or limit > 100:
+                limit = 25  # Default to 25 if out of range
+        except (ValueError, TypeError):
+            limit = 25
+        
+        # URL decode the query (in case of special characters)
+        try:
+            from urllib.parse import unquote
+            query = unquote(query)
+        except:
+            pass
         
         # Remove any "%" characters that might have been accidentally included
         query = query.replace('%', '').strip()
@@ -1157,49 +1182,84 @@ def search_comments():
         # Validate and sanitize input
         is_valid, sanitized_query, error_msg = sanitize_search_query(query)
         if not is_valid:
-            return jsonify({"error": error_msg}), 400
+            logger.warning(f"Invalid query rejected: {query} - {error_msg}")
+            return jsonify({"error": error_msg, "results": []}), 400
         
         query = sanitized_query
         
         # Check cache first
         cached_result = _get_cached_search(query, limit)
         if cached_result is not None:
+            logger.debug(f"Cache hit for query: {query}")
             return jsonify({"results": cached_result})
         
         # Load data (cached in memory)
         df, _ = _load_search_data()
-        if df is None:
-            return jsonify({"error": "Search data not available"}), 503
-
-        # Hyper-optimized search strategy for Render (ultra-fast)
-        escaped_query = re.escape(query)
+        if df is None or len(df) == 0:
+            logger.error("Search data not available or empty")
+            return jsonify({"error": "Search data not available", "results": []}), 503
         
-        # Use pre-computed lowercase column if available (much faster)
-        text_column = df["text_lower"] if "text_lower" in df.columns else df["text"].astype(str).str.lower()
+        # Validate that required columns exist
+        if "text" not in df.columns:
+            logger.error("Required 'text' column missing from search data")
+            return jsonify({"error": "Search data is corrupted", "results": []}), 503
+        
+        # Ensure text_lower column exists (create if missing)
+        if "text_lower" not in df.columns:
+            logger.warning("text_lower column missing, creating it...")
+            df["text_lower"] = df["text"].astype(str).str.lower()
+        
+        # Use pre-computed lowercase column (much faster)
+        text_column = df["text_lower"]
+        
+        # Escape query for regex (handle special characters safely)
+        try:
+            escaped_query = re.escape(query)
+        except Exception as e:
+            logger.error(f"Error escaping query '{query}': {e}")
+            return jsonify({"error": "Invalid query format", "results": []}), 400
         
         # Strategy 1: Word boundary match (most relevant) - vectorized for speed
-        word_boundary_pattern = r'\b' + escaped_query + r'\b'
-        mask = text_column.str.contains(word_boundary_pattern, case=False, na=False, regex=True)
-        matches = df[mask].copy()
+        matches = pd.DataFrame()
+        try:
+            word_boundary_pattern = r'\b' + escaped_query + r'\b'
+            mask = text_column.str.contains(word_boundary_pattern, case=False, na=False, regex=True)
+            matches = df[mask].copy()
+            logger.debug(f"Word boundary match found {len(matches)} results for '{query}'")
+        except Exception as e:
+            logger.warning(f"Word boundary search failed for '{query}': {e}, trying simpler match")
+            # Fallback to simple contains if regex fails
+            try:
+                mask = text_column.str.contains(escaped_query, case=False, na=False, regex=False)
+                matches = df[mask].copy()
+            except Exception as e2:
+                logger.error(f"Simple contains search also failed: {e2}")
+                return jsonify({"error": "Search failed due to invalid query", "results": []}), 400
         
-        # Strategy 2: If not enough, try partial match (faster than before)
+        # Strategy 2: If not enough, try partial match (without word boundaries)
         if len(matches) < limit:
-            partial_mask = text_column.str.contains(escaped_query, case=False, na=False, regex=True)
-            partial_matches = df[partial_mask].copy()
-            
-            # Fast exclusion using pandas
-            if len(matches) > 0 and "id" in partial_matches.columns and "id" in matches.columns:
-                existing_ids = set(matches["id"].astype(str))
-                partial_matches = partial_matches[~partial_matches["id"].astype(str).isin(existing_ids)]
-            
-            # Combine efficiently
-            if len(partial_matches) > 0:
-                matches = pd.concat([matches, partial_matches], ignore_index=True)
+            try:
+                partial_mask = text_column.str.contains(escaped_query, case=False, na=False, regex=False)
+                partial_matches = df[partial_mask].copy()
+                
+                # Fast exclusion using pandas (avoid duplicates)
+                if len(matches) > 0 and "id" in partial_matches.columns and "id" in matches.columns:
+                    existing_ids = set(matches["id"].astype(str))
+                    partial_matches = partial_matches[~partial_matches["id"].astype(str).isin(existing_ids)]
+                
+                # Combine efficiently
+                if len(partial_matches) > 0:
+                    matches = pd.concat([matches, partial_matches], ignore_index=True)
+                    logger.debug(f"Added {len(partial_matches)} partial matches, total: {len(matches)}")
+            except Exception as e:
+                logger.warning(f"Partial match search failed: {e}")
         
         # Sort by relevance and limit (optimized)
         if len(matches) > 0:
             # Sort only if we have like_count column
             if "like_count" in matches.columns:
+                # Handle NaN values in like_count
+                matches = matches.fillna({"like_count": 0})
                 matches = matches.nlargest(limit, "like_count", keep='first')
             else:
                 matches = matches.head(limit)
@@ -1207,10 +1267,23 @@ def search_comments():
         else:
             results = pd.DataFrame()
         
-        # Select columns
-        cols = [c for c in ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"] if c in results.columns]
+        # Select columns (handle missing columns gracefully)
+        available_cols = ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"]
+        cols = [c for c in available_cols if c in results.columns]
+        
         if len(results) > 0:
-            results_dict = results[cols].to_dict("records")
+            try:
+                results_dict = results[cols].to_dict("records")
+                # Ensure all values are JSON serializable
+                for record in results_dict:
+                    for key, value in record.items():
+                        if pd.isna(value):
+                            record[key] = None
+                        elif isinstance(value, (pd.Timestamp, datetime)):
+                            record[key] = value.isoformat() if hasattr(value, 'isoformat') else str(value)
+            except Exception as e:
+                logger.error(f"Error converting results to dict: {e}")
+                results_dict = []
         else:
             results_dict = []
         
@@ -1224,11 +1297,11 @@ def search_comments():
         return response
         
     except ValueError as e:
-        logger.error(f"Invalid input in search_comments: {e}")
-        return jsonify({"error": "Invalid search parameters"}), 400
+        logger.error(f"Invalid input in search_comments: {e}", exc_info=True)
+        return jsonify({"error": "Invalid search parameters", "results": []}), 400
     except Exception as e:
-        logger.error(f"Error in search_comments: {e}", exc_info=True)
-        return jsonify({"error": "An error occurred while searching. Please try again."}), 500
+        logger.error(f"Unexpected error in search_comments: {e}", exc_info=True)
+        return jsonify({"error": "An error occurred while searching. Please try again.", "results": []}), 500
 
 
 # Gunicorn compatibility - ensure app is properly initialized

@@ -1944,8 +1944,16 @@
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 15000);
                 
-                const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=25`, {
-                    signal: controller.signal
+                // Ensure query is properly encoded and trimmed
+                const encodedQuery = encodeURIComponent(q.trim());
+                const searchUrl = `/api/search?q=${encodedQuery}&limit=25`;
+                
+                const resp = await fetch(searchUrl, {
+                    signal: controller.signal,
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
                 });
                 
                 clearTimeout(timeoutId);
@@ -1953,19 +1961,36 @@
                 if (!hasCachedResults && progressFill) progressFill.style.width = '80%';
                 
                 if (!resp.ok) {
-                    const errorData = await resp.json().catch(() => ({}));
+                    let errorData = {};
+                    try {
+                        errorData = await resp.json();
+                    } catch (e) {
+                        // If JSON parsing fails, use status text
+                        errorData = { error: `Server error: ${resp.status} ${resp.statusText}` };
+                    }
+                    
                     // If we have cached results, don't show error, just silently fail
                     if (hasCachedResults) {
-                        console.warn('Background search refresh failed, using cached results');
+                        console.warn('Background search refresh failed, using cached results:', errorData.error || resp.status);
                         if (progressBar) progressBar.classList.remove('active');
                         if (progressFill) progressFill.style.width = '0%';
                         resetSearchState();
                         return;
                     }
-                    throw new Error(errorData.error || `Search failed with status ${resp.status}`);
+                    
+                    // Show user-friendly error message
+                    const errorMsg = errorData.error || `Search failed (${resp.status})`;
+                    console.error('Search error:', errorMsg);
+                    throw new Error(errorMsg);
                 }
                 
-                const data = await resp.json();
+                let data = {};
+                try {
+                    data = await resp.json();
+                } catch (e) {
+                    console.error('Failed to parse JSON response:', e);
+                    throw new Error('Invalid response from server');
+                }
                 
                 if (!hasCachedResults && progressFill) progressFill.style.width = '100%';
                 
@@ -1973,7 +1998,7 @@
                 if (data.error) {
                     // If we have cached results, don't show error
                     if (hasCachedResults) {
-                        console.warn('Background search refresh returned error, using cached results');
+                        console.warn('Background search refresh returned error, using cached results:', data.error);
                         if (progressBar) progressBar.classList.remove('active');
                         if (progressFill) progressFill.style.width = '0%';
                         resetSearchState();
