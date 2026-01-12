@@ -251,9 +251,9 @@ PRESTORED_METRICS = {
     'noise_ratio': 0.0,
     'avg_cluster_size': 0.0,
     'max_cluster_size': 0,
-    'dataset_downloads': 6503,
-    'exploratory_sessions': 21042,
-    'searches': 9382
+    'dataset_downloads': 0,  # Will be updated from database
+    'exploratory_sessions': 0,  # Will be updated from database
+    'searches': 0  # Will be updated from database (no hardcoded values)
 }
 
 # Pre-stored search queries for instant access (expanded for better UX)
@@ -417,12 +417,25 @@ def _update_prestored_metrics():
                 'exploratory_sessions': int(exploratory_sessions),
             })
         
-        # Update searches from Supabase if available
+        # Update searches from Supabase if available (always fetch from DB, no hardcoded fallback)
         if supabase:
             try:
-                searches = _get_metric_supabase('searches', PRESTORED_METRICS.get('searches', 9382))
+                searches = _get_metric_supabase('searches', 0)  # No hardcoded fallback - always from DB
                 with _metrics_lock:
                     PRESTORED_METRICS['searches'] = searches
+            except:
+                pass
+        else:
+            # Fallback to SQLite for searches
+            try:
+                conn = sqlite3.connect(db_path)
+                cursor = conn.cursor()
+                cursor.execute("SELECT value FROM impact_metrics WHERE key = ?", ("searches",))
+                row = cursor.fetchone()
+                if row:
+                    with _metrics_lock:
+                        PRESTORED_METRICS['searches'] = int(row[0])
+                conn.close()
             except:
                 pass
         
@@ -993,14 +1006,60 @@ def _get_metric_supabase(key, default=0):
 
 @app.route('/api/metrics')
 def get_metrics():
-    """Get all metrics (from pre-stored hashmap for instant access)."""
-    # Return pre-stored metrics instantly (no database queries)
-    with _metrics_lock:
+    """Get all metrics (always fetched fresh from database, not cached)."""
+    try:
+        # Always fetch fresh from database (no hardcoded values)
+        searches = 0
+        downloads = 0
+        exploratory_sessions = 0
+        
+        # Fetch from Supabase if available
+        if USE_SUPABASE and supabase:
+            searches = _get_metric_supabase('searches', 0)
+            downloads = _get_metric_supabase('downloads', 0)
+            exploratory_sessions = _get_metric_supabase('exploratory_sessions', 0)
+        else:
+            # Fallback to SQLite
+            try:
+                conn = sqlite3.connect(db_path)
+                cursor = conn.cursor()
+                
+                # Get searches (from impact_metrics or default to 0)
+                cursor.execute("SELECT value FROM impact_metrics WHERE key = ?", ("searches",))
+                row = cursor.fetchone()
+                if row:
+                    searches = int(row[0])
+                
+                # Get downloads
+                cursor.execute("SELECT value FROM impact_metrics WHERE key = ?", ("dataset_downloads",))
+                row = cursor.fetchone()
+                if row:
+                    downloads = int(row[0])
+                
+                # Get sessions
+                cursor.execute("SELECT value FROM impact_metrics WHERE key = ?", ("exploratory_sessions",))
+                row = cursor.fetchone()
+                if row:
+                    exploratory_sessions = int(row[0])
+                
+                conn.close()
+            except Exception as e:
+                logger.error(f"Error reading metrics from SQLite: {e}")
+        
         return jsonify({
-            'searches': PRESTORED_METRICS.get('searches', 9382),
-            'downloads': PRESTORED_METRICS.get('dataset_downloads', 6503),
-            'exploratory_sessions': PRESTORED_METRICS.get('exploratory_sessions', 21042)
+            'searches': searches,
+            'downloads': downloads,
+            'exploratory_sessions': exploratory_sessions
         })
+    except Exception as e:
+        logger.error(f"Error getting metrics: {e}")
+        # Return cached values as last resort (but still try to update them)
+        with _metrics_lock:
+            return jsonify({
+                'searches': PRESTORED_METRICS.get('searches', 0),
+                'downloads': PRESTORED_METRICS.get('dataset_downloads', 0),
+                'exploratory_sessions': PRESTORED_METRICS.get('exploratory_sessions', 0)
+            })
 
 
 @app.route('/api/search/queries')
