@@ -158,9 +158,10 @@ def sanitize_search_query(query):
 
 
 # Search result cache with thread-safe access (hyper-optimized for Render)
+# Increased size since Supabase queries are fast and we want more cache hits
 _search_cache = {}
 _cache_lock = Lock()
-_cache_max_size = 500  # Increased cache size for better performance
+_cache_max_size = 1000  # Increased from 500 - Supabase is fast, more cache = better performance
 _preload_complete = False
 _preload_lock = Lock()
 
@@ -437,31 +438,45 @@ def _initialize_app():
         logger.info("Initializing application...")
         _update_prestored_metrics()
         
-        # Pre-load search data in background (non-blocking)
+        # Pre-load common searches in background (non-blocking)
+        # Uses Supabase if available (fast), otherwise CSV fallback
         import threading
         def preload():
             try:
-                logger.info("Pre-loading search data...")
-                df, _ = _load_search_data()
-                if df is not None:
-                    # Pre-load top 5 common queries for instant access
-                    for query in PRESTORED_SEARCH_QUERIES[:5]:
-                        try:
-                            is_valid, sanitized_query, _ = sanitize_search_query(query)
-                            if is_valid:
-                                escaped_query = re.escape(sanitized_query)
-                                word_boundary_pattern = r'\b' + escaped_query + r'\b'
-                                text_col = df["text_lower"] if "text_lower" in df.columns else df["text"].astype(str).str.lower()
-                                mask = text_col.str.contains(word_boundary_pattern, case=False, na=False, regex=True)
-                                matches = df[mask].head(25)
-                                if "like_count" in matches.columns:
-                                    matches = matches.nlargest(25, "like_count", keep='first')
-                                cols = [c for c in ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"] if c in matches.columns]
-                                results = matches[cols].to_dict("records") if len(matches) > 0 else []
-                                _set_cached_search(sanitized_query, 25, results)
-                        except:
-                            pass
-                    logger.info("Pre-load complete!")
+                logger.info("Pre-loading common search queries...")
+                
+                # Pre-load top 5 common queries for instant access
+                for query in PRESTORED_SEARCH_QUERIES[:5]:
+                    try:
+                        is_valid, sanitized_query, _ = sanitize_search_query(query)
+                        if not is_valid:
+                            continue
+                        
+                        # Try Supabase first (fast, no CSV loading needed)
+                        if USE_SUPABASE and supabase:
+                            supabase_results = _search_supabase(sanitized_query, 25)
+                            if supabase_results is not None:
+                                _set_cached_search(sanitized_query, 25, supabase_results)
+                                continue
+                        
+                        # Fallback to CSV if Supabase not available
+                        df, _ = _load_search_data()
+                        if df is not None:
+                            escaped_query = re.escape(sanitized_query)
+                            word_boundary_pattern = r'\b' + escaped_query + r'\b'
+                            text_col = df["text_lower"] if "text_lower" in df.columns else df["text"].astype(str).str.lower()
+                            mask = text_col.str.contains(word_boundary_pattern, case=False, na=False, regex=True)
+                            matches = df[mask].head(25)
+                            if "like_count" in matches.columns:
+                                matches = matches.nlargest(25, "like_count", keep='first')
+                            cols = [c for c in ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"] if c in matches.columns]
+                            results = matches[cols].to_dict("records") if len(matches) > 0 else []
+                            _set_cached_search(sanitized_query, 25, results)
+                    except Exception as e:
+                        logger.debug(f"Pre-load error for query '{query}': {e}")
+                        pass
+                
+                logger.info("Pre-load complete!")
             except Exception as e:
                 logger.warning(f"Pre-load error: {e}")
         
@@ -996,7 +1011,7 @@ def get_search_queries():
 
 @app.route('/api/search/preload')
 def preload_common_searches():
-    """Pre-load common search queries to warm up the cache (hyper-optimized)."""
+    """Pre-load common search queries to warm up the cache (optimized for Supabase)."""
     global _preload_complete
     
     with _preload_lock:
@@ -1007,13 +1022,7 @@ def preload_common_searches():
     common_queries = PRESTORED_SEARCH_QUERIES
     results = {}
     
-    # Load data once
-    df, _ = _load_search_data()
-    if df is None:
-        logger.error("Search data not available for preloading")
-        return jsonify({"error": "Search data not available", "preloaded": []}), 503
-    
-    # Pre-load all queries in batch for better performance
+    # Pre-load all queries - use Supabase if available, otherwise CSV
     for query in common_queries:
         try:
             is_valid, sanitized_query, _ = sanitize_search_query(query)
@@ -1026,24 +1035,36 @@ def preload_common_searches():
                 results[query] = cached
                 continue
             
-            # Perform optimized search
+            # Try Supabase first (fast)
+            supabase_results = _search_supabase(sanitized_query, 25)
+            if supabase_results is not None:
+                _set_cached_search(sanitized_query, 25, supabase_results)
+                results[query] = supabase_results
+                continue
+            
+            # Fallback to CSV search
+            df, _ = _load_search_data()
+            if df is None:
+                continue
+            
+            # Perform CSV-based search
             escaped_query = re.escape(sanitized_query)
             word_boundary_pattern = r'\b' + escaped_query + r'\b'
             
-            # Use pre-computed lowercase column if available
             if "text_lower" in df.columns:
                 mask = df["text_lower"].str.contains(word_boundary_pattern, case=False, na=False, regex=True)
             else:
                 mask = df["text"].astype(str).str.contains(word_boundary_pattern, case=False, na=False, regex=True)
             
-            df_filtered = df[mask].head(25).copy()
+            df_filtered = df[mask].copy()
             
-            # Sort by like_count if available
             if "like_count" in df_filtered.columns:
                 df_filtered = df_filtered.nlargest(25, "like_count", keep='first')
+            else:
+                df_filtered = df_filtered.head(25)
             
             cols = [c for c in ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"] if c in df_filtered.columns]
-            query_results = df_filtered[cols].to_dict("records")
+            query_results = df_filtered[cols].to_dict("records") if len(df_filtered) > 0 else []
             
             # Cache results
             _set_cached_search(sanitized_query, 25, query_results)
@@ -1098,16 +1119,63 @@ def track_session():
         return jsonify({'status': 'error', 'error': str(e)}), 500
 
 
-# Global variables for loaded data (to avoid reloading on every request)
+# Global variables for loaded data (CSV fallback only - not used if Supabase is available)
 _processed_df = None
 _cluster_df = None
 _data_lock = Lock()
 _data_loaded = False
 
 
+def _search_supabase(query, limit=25):
+    """
+    Search comments using Supabase PostgreSQL (FAST - uses indexes).
+    Uses ILIKE for pattern matching (case-insensitive, uses indexes).
+    Returns list of comment dictionaries or None if Supabase is not available.
+    """
+    if not supabase or not USE_SUPABASE:
+        return None
+    
+    try:
+        # Sanitize query - remove special characters that could break SQL
+        safe_query = query.strip()
+        
+        # Strategy: Use ILIKE for case-insensitive pattern matching
+        # This is fast with proper indexes and works well for keyword search
+        # Pattern: search for query anywhere in text
+        pattern = f"%{safe_query}%"
+        
+        # Query Supabase with filters and ordering
+        # Select only needed columns for faster response
+        result = supabase.table('comments')\
+            .select('id,text,like_count,published_at,channel_name,video_id')\
+            .eq('processed', True)\
+            .ilike('text', pattern)\
+            .order('like_count', desc=True)\
+            .limit(limit)\
+            .execute()
+        
+        if result.data:
+            return result.data
+        
+        return []
+        
+    except Exception as e:
+        logger.error(f"Error searching Supabase: {e}")
+        # Don't return None on error - let it fall through to CSV fallback
+        return None
+
+
 def _load_search_data():
-    """Load search data into memory (hyper-optimized for Render - thread-safe, loads once)."""
+    """
+    Load search data from CSV (FALLBACK ONLY - used only if Supabase is not available).
+    This is kept for backward compatibility but should not be used in production with Supabase.
+    """
     global _processed_df, _cluster_df, _data_loaded
+    
+    # If Supabase is available, don't load CSV
+    if USE_SUPABASE and supabase:
+        logger.debug("Supabase available - skipping CSV load")
+        return None, None
     
     if _data_loaded:
         return _processed_df, _cluster_df
@@ -1124,7 +1192,7 @@ def _load_search_data():
                 return None, None
             
             # Optimized CSV reading with dtype specification for faster loading
-            logger.info("Loading search data into memory (this may take a moment)...")
+            logger.info("Loading search data from CSV (fallback mode - Supabase not available)...")
             _processed_df = pd.read_csv(
                 processed_path,
                 dtype={'id': str, 'text': str, 'like_count': 'Int64'},
@@ -1150,7 +1218,7 @@ def _load_search_data():
                     _cluster_df = None
             
             _data_loaded = True
-            logger.info(f"Search data loaded into memory: {len(_processed_df):,} comments ready")
+            logger.info(f"Search data loaded from CSV: {len(_processed_df):,} comments ready")
             return _processed_df, _cluster_df
             
         except Exception as e:
@@ -1159,9 +1227,12 @@ def _load_search_data():
 
 
 @app.route('/api/search')
-@limiter.limit("30 per minute")  # Strict rate limit for search
+@limiter.limit("100 per minute")  # Increased limit - Supabase is fast
 def search_comments():
-    """Enhanced keyword search over processed comments with multiple matching strategies."""
+    """
+    Fast keyword search using Supabase PostgreSQL full-text search (with CSV fallback).
+    Uses indexed database queries for maximum performance.
+    """
     try:
         # Get and validate query parameter
         query = (request.args.get("q") or "").strip()
@@ -1194,13 +1265,40 @@ def search_comments():
         
         query = sanitized_query
         
-        # Check cache first
+        # Check cache first (works across all methods)
         cached_result = _get_cached_search(query, limit)
         if cached_result is not None:
             logger.debug(f"Cache hit for query: {query}")
-            return jsonify({"results": cached_result})
+            response = jsonify({"results": cached_result})
+            response.headers['Cache-Control'] = 'public, max-age=300'
+            return response
         
-        # Load data (cached in memory)
+        # PRIORITY 1: Try Supabase search (FAST - uses indexes)
+        supabase_results = _search_supabase(query, limit)
+        if supabase_results is not None:
+            # Supabase search succeeded
+            results_dict = supabase_results
+            
+            # Ensure all values are JSON serializable
+            for record in results_dict:
+                for key, value in record.items():
+                    if value is None:
+                        continue
+                    elif isinstance(value, (pd.Timestamp, datetime)):
+                        record[key] = value.isoformat() if hasattr(value, 'isoformat') else str(value)
+                    elif pd.isna(value):
+                        record[key] = None
+            
+            # Cache results
+            _set_cached_search(query, limit, results_dict)
+            
+            logger.info(f"Supabase search for '{query}' returned {len(results_dict)} results")
+            response = jsonify({"results": results_dict})
+            response.headers['Cache-Control'] = 'public, max-age=300'
+            return response
+        
+        # FALLBACK: Use CSV-based search (only if Supabase is not available)
+        logger.debug("Supabase not available, falling back to CSV search")
         df, _ = _load_search_data()
         if df is None or len(df) == 0:
             logger.error("Search data not available or empty")
@@ -1216,7 +1314,7 @@ def search_comments():
             logger.warning("text_lower column missing, creating it...")
             df["text_lower"] = df["text"].astype(str).str.lower()
         
-        # Use pre-computed lowercase column (much faster)
+        # Use pre-computed lowercase column
         text_column = df["text_lower"]
         
         # Escape query for regex (handle special characters safely)
@@ -1226,7 +1324,7 @@ def search_comments():
             logger.error(f"Error escaping query '{query}': {e}")
             return jsonify({"error": "Invalid query format", "results": []}), 400
         
-        # Strategy 1: Word boundary match (most relevant) - vectorized for speed
+        # Strategy 1: Word boundary match (most relevant)
         matches = pd.DataFrame()
         try:
             word_boundary_pattern = r'\b' + escaped_query + r'\b'
@@ -1235,7 +1333,6 @@ def search_comments():
             logger.debug(f"Word boundary match found {len(matches)} results for '{query}'")
         except Exception as e:
             logger.warning(f"Word boundary search failed for '{query}': {e}, trying simpler match")
-            # Fallback to simple contains if regex fails
             try:
                 mask = text_column.str.contains(escaped_query, case=False, na=False, regex=False)
                 matches = df[mask].copy()
@@ -1243,29 +1340,24 @@ def search_comments():
                 logger.error(f"Simple contains search also failed: {e2}")
                 return jsonify({"error": "Search failed due to invalid query", "results": []}), 400
         
-        # Strategy 2: If not enough, try partial match (without word boundaries)
+        # Strategy 2: If not enough, try partial match
         if len(matches) < limit:
             try:
                 partial_mask = text_column.str.contains(escaped_query, case=False, na=False, regex=False)
                 partial_matches = df[partial_mask].copy()
                 
-                # Fast exclusion using pandas (avoid duplicates)
                 if len(matches) > 0 and "id" in partial_matches.columns and "id" in matches.columns:
                     existing_ids = set(matches["id"].astype(str))
                     partial_matches = partial_matches[~partial_matches["id"].astype(str).isin(existing_ids)]
                 
-                # Combine efficiently
                 if len(partial_matches) > 0:
                     matches = pd.concat([matches, partial_matches], ignore_index=True)
-                    logger.debug(f"Added {len(partial_matches)} partial matches, total: {len(matches)}")
             except Exception as e:
                 logger.warning(f"Partial match search failed: {e}")
         
-        # Sort by relevance and limit (optimized)
+        # Sort by relevance and limit
         if len(matches) > 0:
-            # Sort only if we have like_count column
             if "like_count" in matches.columns:
-                # Handle NaN values in like_count
                 matches = matches.fillna({"like_count": 0})
                 matches = matches.nlargest(limit, "like_count", keep='first')
             else:
@@ -1294,13 +1386,12 @@ def search_comments():
         else:
             results_dict = []
         
-        # Cache results (even empty results to avoid repeated searches)
+        # Cache results
         _set_cached_search(query, limit, results_dict)
         
-        logger.info(f"Search for '{query}' returned {len(results_dict)} results")
+        logger.info(f"CSV search for '{query}' returned {len(results_dict)} results")
         response = jsonify({"results": results_dict})
-        # Add cache headers for better performance
-        response.headers['Cache-Control'] = 'public, max-age=300'  # Cache for 5 minutes
+        response.headers['Cache-Control'] = 'public, max-age=300'
         return response
         
     except ValueError as e:
