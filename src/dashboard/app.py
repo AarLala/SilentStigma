@@ -1227,11 +1227,12 @@ def _load_search_data():
 
 
 @app.route('/api/search')
-@limiter.limit("100 per minute")  # Increased limit - Supabase is fast
+# No rate limit - searches are fast with Supabase and should be unrestricted
 def search_comments():
     """
     Fast keyword search using Supabase PostgreSQL full-text search (with CSV fallback).
     Uses indexed database queries for maximum performance.
+    No restrictions on search count or result limit.
     """
     try:
         # Get and validate query parameter
@@ -1239,11 +1240,11 @@ def search_comments():
         if not query:
             return jsonify({"error": "Query parameter 'q' is required", "results": []}), 400
         
-        # Validate limit parameter
+        # Validate limit parameter - no maximum restriction
         try:
             limit = int(request.args.get("limit", 25))
-            if limit < 1 or limit > 100:
-                limit = 25  # Default to 25 if out of range
+            if limit < 1:
+                limit = 25  # Minimum 1, default to 25 if invalid
         except (ValueError, TypeError):
             limit = 25
         
