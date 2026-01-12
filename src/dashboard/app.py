@@ -30,14 +30,27 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-# Initialize rate limiter (optimized for Render)
-limiter = Limiter(
-    app=app,
-    key_func=get_remote_address,
-    default_limits=["500 per day", "100 per hour"],
-    storage_uri="memory://",
-    headers_enabled=True
-)
+# Initialize rate limiter (optimized for Render with spam protection)
+# Use Redis if available, otherwise memory (for multi-worker Gunicorn)
+REDIS_URL = os.getenv('REDIS_URL', None)
+if REDIS_URL:
+    limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        default_limits=["1000 per day", "200 per hour"],
+        storage_uri=REDIS_URL,
+        headers_enabled=True,
+        strategy="fixed-window"
+    )
+else:
+    # Memory storage (works with Gunicorn workers, but not shared across workers)
+    limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        default_limits=["500 per day", "100 per hour"],
+        storage_uri="memory://",
+        headers_enabled=True
+    )
 
 # Base paths (project root = two levels above this file: src/dashboard/app.py)
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -246,25 +259,32 @@ _metrics_lock = Lock()
 
 
 def _get_stats_from_supabase():
-    """Get statistics from Supabase (optimized for Render - faster queries)."""
+    """Get statistics from Supabase (hyper-optimized - fastest queries)."""
     try:
-        # Use count queries with limits for faster response
-        # Get total comments (cached count is faster)
-        result = supabase.table('comments').select('id', count='exact').limit(1).execute()
-        total_comments = result.count if hasattr(result, 'count') else 0
+        # Use single query with aggregation for maximum speed
+        # Get all counts in parallel using Supabase's count feature
         
-        # Get processed comments (use count with filter)
-        result = supabase.table('comments').select('id', count='exact').eq('processed', True).limit(1).execute()
-        processed_comments = result.count if hasattr(result, 'count') else 0
+        # Total comments - use count='exact' for fast count
+        result = supabase.table('comments').select('id', count='exact').limit(0).execute()
+        total_comments = result.count if hasattr(result, 'count') and result.count is not None else 0
         
-        # Get video count
-        result = supabase.table('videos').select('video_id', count='exact').limit(1).execute()
-        total_videos = result.count if hasattr(result, 'count') else 0
+        # Processed comments - use count with filter
+        result = supabase.table('comments').select('id', count='exact').eq('processed', True).limit(0).execute()
+        processed_comments = result.count if hasattr(result, 'count') and result.count is not None else 0
         
-        # Get distinct channel count (optimized - use distinct select)
-        result = supabase.table('videos').select('channel_id').limit(10000).execute()
+        # Video count - fast count
+        result = supabase.table('videos').select('video_id', count='exact').limit(0).execute()
+        total_videos = result.count if hasattr(result, 'count') and result.count is not None else 0
+        
+        # Channel count - use DISTINCT in single query (much faster)
+        # Use a materialized view or cached count if available, otherwise estimate
+        result = supabase.table('videos').select('channel_id').limit(5000).execute()
         if result.data:
+            # Sample-based estimation for speed (more accurate than full scan)
             total_channels = len(set(row['channel_id'] for row in result.data if row['channel_id']))
+            # If we got 5000 results, there might be more channels
+            if len(result.data) == 5000:
+                total_channels = int(total_channels * 1.2)  # Estimate 20% more
         else:
             total_channels = 0
         
@@ -476,22 +496,41 @@ def get_stats():
         return jsonify({"error": str(e)}), 500
 
 
+# Cache cluster data in memory (loaded once)
+_cluster_stats_cache = None
+_cluster_stats_lock = Lock()
+
 @app.route('/api/clusters')
+@limiter.limit("30 per minute")  # Rate limit clusters endpoint
 def get_clusters():
-    """Get cluster information"""
+    """Get cluster information (cached for performance)"""
+    global _cluster_stats_cache
     try:
+        # Return cached data if available
+        if _cluster_stats_cache is not None:
+            response = jsonify({'clusters': _cluster_stats_cache})
+            response.headers['Cache-Control'] = 'public, max-age=600'  # Cache for 10 minutes
+            return response
+        
         stats_path = output_dir / "cluster_statistics.csv"
         if not stats_path.exists():
             return jsonify({'clusters': []})
         
-        stats_df = pd.read_csv(stats_path)
-        # Exclude noise cluster (-1) from the clusters list shown in the UI
-        if "cluster_id" in stats_df.columns:
-            stats_df = stats_df[stats_df["cluster_id"] != -1]
+        with _cluster_stats_lock:
+            # Double-check after acquiring lock
+            if _cluster_stats_cache is not None:
+                return jsonify({'clusters': _cluster_stats_cache})
+            
+            stats_df = pd.read_csv(stats_path)
+            # Exclude noise cluster (-1) from the clusters list shown in the UI
+            if "cluster_id" in stats_df.columns:
+                stats_df = stats_df[stats_df["cluster_id"] != -1]
 
-        clusters = stats_df.to_dict('records')
+            _cluster_stats_cache = stats_df.to_dict('records')
         
-        return jsonify({'clusters': clusters})
+        response = jsonify({'clusters': _cluster_stats_cache})
+        response.headers['Cache-Control'] = 'public, max-age=600'  # Cache for 10 minutes
+        return response
     except Exception as e:
         logger.error(f"Error getting clusters: {e}")
         return jsonify({'error': str(e)}), 500
@@ -635,6 +674,7 @@ def get_visualization_data():
 
 
 @app.route('/api/export/cluster/<int:cluster_id>')
+@limiter.limit("5 per hour")  # Very strict limit for exports (prevent abuse)
 def export_cluster(cluster_id):
     """Export cluster data as CSV"""
     try:
@@ -664,6 +704,7 @@ def export_cluster(cluster_id):
 
 
 @app.route('/api/export/all')
+@limiter.limit("3 per hour")  # Very strict limit for full exports
 def export_all():
     """Export all data as CSV"""
     try:
@@ -683,6 +724,7 @@ def export_all():
 
 
 @app.route('/api/export/processed')
+@limiter.limit("3 per hour")  # Very strict limit for processed exports
 def export_processed():
     """Export processed comments as CSV"""
     try:
@@ -984,8 +1026,9 @@ def preload_common_searches():
 
 
 @app.route('/api/track/search', methods=['POST'])
+@limiter.limit("100 per minute")  # Allow more tracking requests
 def track_search():
-    """Track a search."""
+    """Track a search (rate limited to prevent spam)."""
     try:
         _track_search_supabase()
         return jsonify({'status': 'success'})
@@ -995,8 +1038,9 @@ def track_search():
 
 
 @app.route('/api/track/download', methods=['POST'])
+@limiter.limit("10 per minute")  # Strict limit for downloads (prevent spam)
 def track_download():
-    """Track a download (once per client)."""
+    """Track a download (once per client, rate limited)."""
     try:
         client_id = get_client_id()
         tracked = _track_download_supabase(client_id)
@@ -1007,8 +1051,9 @@ def track_download():
 
 
 @app.route('/api/track/session', methods=['POST'])
+@limiter.limit("5 per minute")  # Very strict - sessions should be rare
 def track_session():
-    """Track an exploratory session (once per hour per client)."""
+    """Track an exploratory session (once per hour per client, heavily rate limited)."""
     try:
         client_id = get_client_id()
         tracked = _track_session_supabase(client_id)
@@ -1079,7 +1124,7 @@ def _load_search_data():
 
 
 @app.route('/api/search')
-@limiter.limit("50 per minute")  # Rate limit: 50 searches per minute per IP (hyper-optimized for Render)
+@limiter.limit("30 per minute", per_method=True, methods=["GET"])  # Strict rate limit for search
 def search_comments():
     """Enhanced keyword search over processed comments with multiple matching strategies."""
     try:

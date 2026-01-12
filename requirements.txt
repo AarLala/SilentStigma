@@ -10,6 +10,9 @@ pandas>=2.0.0
 # Database
 supabase>=2.0.0
 
+# Caching (optional - for better performance with Gunicorn workers)
+# redis>=5.0.0  # Uncomment if using Redis for rate limiting
+
 # Utilities
 python-dotenv>=1.0.0
 pyyaml>=6.0.1
