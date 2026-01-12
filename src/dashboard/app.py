@@ -422,54 +422,69 @@ def _update_prestored_metrics():
         logger.error(f"Error updating pre-stored metrics: {e}")
 
 
-# Initialize metrics on startup
-_update_prestored_metrics()
+# Initialize app data (Gunicorn compatible - called on worker startup)
+def _initialize_app():
+    """Initialize app data (called on Gunicorn worker startup)."""
+    try:
+        logger.info("Initializing application...")
+        _update_prestored_metrics()
+        
+        # Pre-load search data in background (non-blocking)
+        import threading
+        def preload():
+            try:
+                logger.info("Pre-loading search data...")
+                df, _ = _load_search_data()
+                if df is not None:
+                    # Pre-load top 5 common queries for instant access
+                    for query in PRESTORED_SEARCH_QUERIES[:5]:
+                        try:
+                            is_valid, sanitized_query, _ = sanitize_search_query(query)
+                            if is_valid:
+                                escaped_query = re.escape(sanitized_query)
+                                word_boundary_pattern = r'\b' + escaped_query + r'\b'
+                                text_col = df["text_lower"] if "text_lower" in df.columns else df["text"].astype(str).str.lower()
+                                mask = text_col.str.contains(word_boundary_pattern, case=False, na=False, regex=True)
+                                matches = df[mask].head(25)
+                                if "like_count" in matches.columns:
+                                    matches = matches.nlargest(25, "like_count", keep='first')
+                                cols = [c for c in ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"] if c in matches.columns]
+                                results = matches[cols].to_dict("records") if len(matches) > 0 else []
+                                _set_cached_search(sanitized_query, 25, results)
+                        except:
+                            pass
+                    logger.info("Pre-load complete!")
+            except Exception as e:
+                logger.warning(f"Pre-load error: {e}")
+        
+        preload_thread = threading.Thread(target=preload, daemon=True)
+        preload_thread.start()
+        logger.info("Application initialized successfully")
+    except Exception as e:
+        logger.error(f"Initialization error: {e}")
 
-# Pre-load search data and common queries on startup (background)
-def _startup_preload():
-    """Pre-load search data and common queries in background for faster first requests."""
-    import threading
-    def preload():
-        try:
-            logger.info("Starting background pre-load of search data...")
-            # Load search data
-            _load_search_data()
-            # Pre-load common searches
-            df, _ = _load_search_data()
-            if df is not None:
-                # Pre-load common queries
-                for query in PRESTORED_SEARCH_QUERIES[:10]:  # Pre-load first 10
-                    try:
-                        is_valid, sanitized_query, _ = sanitize_search_query(query)
-                        if is_valid:
-                            escaped_query = re.escape(sanitized_query)
-                            word_boundary_pattern = r'\b' + escaped_query + r'\b'
-                            text_col = df["text_lower"] if "text_lower" in df.columns else df["text"].astype(str).str.lower()
-                            mask = text_col.str.contains(word_boundary_pattern, case=False, na=False, regex=True)
-                            matches = df[mask].head(25)
-                            if "like_count" in matches.columns:
-                                matches = matches.nlargest(25, "like_count", keep='first')
-                            cols = [c for c in ["id", "text", "like_count", "published_at", "channel_name", "video_id", "cluster"] if c in matches.columns]
-                            results = matches[cols].to_dict("records") if len(matches) > 0 else []
-                            _set_cached_search(sanitized_query, 25, results)
-                    except:
-                        pass
-                logger.info("Background pre-load complete!")
-        except Exception as e:
-            logger.warning(f"Background pre-load error: {e}")
-    
-    # Start pre-load in background thread
-    preload_thread = threading.Thread(target=preload, daemon=True)
-    preload_thread.start()
+# Initialize on module load (Gunicorn will call this for each worker with --preload)
+_initialize_app()
 
-# Start background pre-load
-_startup_preload()
-
-# Health check endpoint for Render
+# Health check endpoint for Render (no rate limit)
 @app.route('/health')
 def health_check():
-    """Health check endpoint for Render."""
-    return jsonify({"status": "healthy", "cache_size": len(_search_cache), "data_loaded": _data_loaded}), 200
+    """Health check endpoint for Render (no rate limiting)."""
+    return jsonify({
+        "status": "healthy",
+        "cache_size": len(_search_cache),
+        "data_loaded": _data_loaded,
+        "supabase_enabled": USE_SUPABASE and supabase is not None
+    }), 200
+
+# Add security headers to all responses
+@app.after_request
+def after_request(response):
+    """Add security headers to all responses."""
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
 
 
 @app.route('/')
