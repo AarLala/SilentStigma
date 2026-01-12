@@ -1015,9 +1015,9 @@ def get_metrics():
         
         # Fetch from Supabase if available
         if USE_SUPABASE and supabase:
-            searches = _get_metric_supabase('searches', 0)
-            downloads = _get_metric_supabase('downloads', 0)
-            exploratory_sessions = _get_metric_supabase('exploratory_sessions', 0)
+            searches = int(_get_metric_supabase('searches', 0))  # Ensure integer, not float
+            downloads = int(_get_metric_supabase('downloads', 0))  # Ensure integer, not float
+            exploratory_sessions = int(_get_metric_supabase('exploratory_sessions', 0))  # Ensure integer, not float
         else:
             # Fallback to SQLite
             try:

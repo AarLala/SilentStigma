@@ -1555,10 +1555,13 @@
                 const resp = await fetch('/api/metrics');
                 const data = await resp.json();
                 const countEl = document.getElementById('search-count-text');
-                if (countEl && data.searches) {
-                    const current = parseInt(countEl.textContent.replace(/,/g, '')) || 0;
-                    if (data.searches !== current) {
-                        animateValue(countEl, current, data.searches, 500, false, false);
+                if (countEl && data.searches !== undefined) {
+                    // Ensure we have an integer, not a float, and remove any percentage signs
+                    const searchCount = Math.floor(parseInt(data.searches) || 0);
+                    const current = parseInt(countEl.textContent.replace(/,/g, '').replace('%', '')) || 0;
+                    if (searchCount !== current) {
+                        // Always display as integer (no percentage, no decimals)
+                        animateValue(countEl, current, searchCount, 500, false, false);
                     }
                 }
             } catch (e) {
@@ -1574,12 +1577,17 @@
                 
                 // Update search count (instant display)
                 const countEl = document.getElementById('search-count-text');
-                if (countEl && data.searches) {
-                    const current = parseInt(countEl.textContent.replace(/,/g, '')) || 0;
-                    if (data.searches !== current) {
-                        // Show immediately, then animate briefly
-                        countEl.textContent = data.searches.toLocaleString();
-                        animateValue(countEl, data.searches * 0.95, data.searches, 100, (n) => Math.floor(n).toLocaleString());
+                if (countEl && data.searches !== undefined) {
+                    // Ensure we have an integer, not a float
+                    const searchCount = Math.floor(parseInt(data.searches) || 0);
+                    const current = parseInt(countEl.textContent.replace(/,/g, '').replace('%', '')) || 0;
+                    if (searchCount !== current) {
+                        // Show immediately as integer (no percentage, no decimals)
+                        countEl.textContent = searchCount.toLocaleString();
+                        // Animate if there's a significant change
+                        if (Math.abs(searchCount - current) > 0) {
+                            animateValue(countEl, current, searchCount, 100, false, false);
+                        }
                     }
                 }
                 
@@ -1772,8 +1780,7 @@
                 if (cachedResults && cachedResults.length > 0) {
                     // Display cached results immediately
                     displaySearchResults(cachedResults, query);
-                    // Track the search (but don't show error if it fails since we have cached results)
-                    fetch('/api/track/search', { method: 'POST' }).catch(() => {});
+                    // Backend already tracks search via before_request hook (no need to call /api/track/search)
                     // Optionally refresh in background (but don't overwrite if it fails)
                     setTimeout(() => {
                         runGlobalSearch(true); // Pass flag to indicate we have cached results
@@ -1928,14 +1935,9 @@
                 resultsContainer.innerHTML = '<div class="loading">Searching...</div>';
             }
 
-            // Track the search (backend also tracks, but this ensures UI updates immediately)
-            try {
-                await fetch('/api/track/search', { method: 'POST' });
-                // Update search count after a brief delay to allow backend to process
-                setTimeout(updateSearchCount, 200);
-            } catch (e) {
-                console.warn('Error tracking search:', e);
-            }
+            // Backend already tracks search via before_request hook (no need to call /api/track/search)
+            // Update search count after a brief delay to allow backend to process
+            setTimeout(updateSearchCount, 200);
 
             if (!hasCachedResults && progressFill) progressFill.style.width = '50%';
 
