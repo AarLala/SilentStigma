@@ -1226,25 +1226,35 @@ def _load_search_data():
             return None, None
 
 
+# Before request hook to increment search counter (happens before rate limiting)
+@app.before_request
+def increment_search_counter_before_rate_limit():
+    """Increment search counter before rate limit check - counter always increments."""
+    if request.endpoint == 'search_comments':
+        # Increment counter immediately (no restriction - always increments)
+        _track_search_supabase()
+
+
 @app.route('/api/search')
-# No rate limit - searches are fast with Supabase and should be unrestricted
+@limiter.limit("10 per 20 seconds")  # Rate limit: 10 searches per 20 seconds to prevent abuse
 def search_comments():
     """
     Fast keyword search using Supabase PostgreSQL full-text search (with CSV fallback).
     Uses indexed database queries for maximum performance.
-    No restrictions on search count or result limit.
+    Rate limited to 10 searches per 20 seconds, but search counter increments on every search.
     """
     try:
+        
         # Get and validate query parameter
         query = (request.args.get("q") or "").strip()
         if not query:
             return jsonify({"error": "Query parameter 'q' is required", "results": []}), 400
         
-        # Validate limit parameter - no maximum restriction
+        # Validate limit parameter
         try:
             limit = int(request.args.get("limit", 25))
-            if limit < 1:
-                limit = 25  # Minimum 1, default to 25 if invalid
+            if limit < 1 or limit > 100:
+                limit = 25  # Default to 25 if out of range
         except (ValueError, TypeError):
             limit = 25
         
